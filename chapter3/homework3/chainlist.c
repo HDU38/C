@@ -57,20 +57,15 @@ int ListInsert(Node *Head, int pos, DataType item)
 	return True;
 }
 
-/* 找到指定元素的位置 */
+/* 找到指定位置的结点 */
 Node* FindItem(Node *H, int pos)
 {
 	Node *p = H->next;
 	int temppos = 0;
 	while (p)
 	{
-		pos++;
-		if (temppos == pos)
-			break;
+		if (++temppos == pos)
+			return p;
 		p = p->next;
 	}
-	if (p)
-		return p;
-	else
-		return NULL;
 }
