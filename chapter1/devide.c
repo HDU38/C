@@ -10,10 +10,11 @@ int num = 0;/* 待划分的数 */
 
 int main()
 {
+	int k;
 	printf("请输入要划分的整数（小于等于100）:");
 	scanf("%d", &num);
 	result[0] = num;
-	for (int k = 2; k <= num; k++)
+	for (k = 2; k <= num; k++)
 		split(num, k);
 	system("pause");
 	return 0;
@@ -22,9 +23,10 @@ int main()
 /* 将整数n划分为k个整数的和 */
 void split(int n, int k)
 {
+	int i;
 	if (k == 1)
 		output(result);/* 输出结果 */
-	for (int i = 1; 2 * i <= n; i++)
+	for (i = 1; 2 * i <= n; i++)
 	{
 		if (i < result[arrayLength(result) - 2])/* 保持划分数的递增性 */
 			continue;

@@ -1,4 +1,4 @@
-#include "CommonData.h"
+#include "MazeDataStruct.h"
 
 
 /* 初始化一个栈 */

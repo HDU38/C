@@ -1,4 +1,4 @@
-#include "CommonData.h"
+#include "MazeDataStruct.h"
 
 /* 标记已走的路 */
 void MarkFoot(SElemType curpos)

@@ -1,5 +1,5 @@
 #include<stdlib.h>
-#include "CommonData.h"
+#include "MazeDataStruct.h"
 
 int main(void)
 {
