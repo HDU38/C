@@ -48,18 +48,21 @@ Status IsAccessible(SElemType curpos)
 /* 寻找迷宫路径 */
 Status MazePath(SElemType start, SElemType end)
 {
-	LinkStack S;
-	S = (LinkStack)malloc(sizeof(StackNode));/* 分配空间 */
-	InitStack(S);/* 创建一个空栈 */
 	SElemType curpos;/* 跟踪位置 */
-	curpos = start;/* 初始化起点 */
+	LinkStack S = (LinkStack)malloc(sizeof(StackNode));/* 分配空间 */
 	SElemType *ne = (SElemType*)malloc(sizeof(SElemType));/* 储存刚出栈的元素 */
+	SElemType *e = NULL;/* 将要入栈的元素 */
+	SElemType *temp = NULL;/* 临时结点 */
+
+	InitStack(S);/* 创建一个空栈 */
+	curpos = start;/* 初始化起点 */
+
 	do
 	{
-		if (IsAccessible(curpos))/* 当前位置可通 */
+		if (IsAccessible(curpos)==TRUE)/* 当前位置可通 */
 		{
 			MarkFoot(curpos);/* 留下足迹 */
-			SElemType* e = (SElemType*)malloc(sizeof(SElemType));/* 分配储存空间 */
+			e = (SElemType*)malloc(sizeof(SElemType));/* 分配储存空间 */
 			e->x = curpos.x;
 			e->y = curpos.y;
 			e->derection = 1;/* 方向初值为1，可顺时针变化，即从1到4递增 */
@@ -89,7 +92,7 @@ Status MazePath(SElemType start, SElemType end)
 				ne只有一份存储空间，后面还涉及对ne的操作，ne只能用来暂时储存刚出栈
 				的元素
 				*/
-				SElemType *temp = (SElemType*)malloc(sizeof(SElemType));
+				temp = (SElemType*)malloc(sizeof(SElemType));
 				*temp = *ne;
 				/*重新压入栈中*/
 				Push(S, temp);
@@ -98,16 +101,17 @@ Status MazePath(SElemType start, SElemType end)
 				curpos = *ne;
 			}
 		}
-	} while (!IsEmpty(S));
+	} while (IsEmpty(S)==FALSE);
 	return FALSE;
 }
 
 /* 显示路径 */
 void DisplayPath(void)
 {
-	for (int i = 0; i < MAZEROWNUM; i++)
+	int i, j;
+	for (i = 0; i < MAZEROWNUM; i++)
 	{
-		for (int j = 0; j < MAZEROWNUM; j++)
+		for (j = 0; j < MAZEROWNUM; j++)
 		{
 			if (maze[i][j] != '!')
 			{

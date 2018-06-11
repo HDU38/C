@@ -11,9 +11,11 @@ typedef struct PolynNode
 
 
 /* 创建多项式 */
-PolynList CreatePolyn(void);
+PolynList CreatePolyn();
 /* 多项式相加 */
 PolynList AddPolyn(PolynList PA, PolynList PB);
+/* 多项式相减 */
+PolynList SubPolyn(PolynList PA, PolynList PB);
 /* 多项式相乘 */
 PolynList MultiPolyn(PolynList PA, PolynList PB);
 /* 多项式按按指数大小排序 */

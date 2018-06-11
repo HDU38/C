@@ -1,11 +1,9 @@
 #include <windows.h>
 #include<stdio.h>
 
-#define ID_EDITBOX    1        //文本编辑框控件
-#define ID_TXTPATH    2        //路径编辑框控件
-#define ID_SAVEBTN    3        //保存文件按钮
-#define ID_CLSBTN    4        //清空编辑区按钮
-#define ID_GROUP    5        //组合框
+#define ID_EDITBOX 1 /* 文本编辑框控件 */
+#define ID_OUTBTN 2 /* 确定按钮 */
+#define ID_CLSBTN 3 /* 清空编辑区按钮 */
 
 
 LRESULT CALLBACK MyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -85,71 +83,48 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 LRESULT CALLBACK MyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	static        HWND hwndChild[5];
+	static        HWND hwndChild[3];
 	HDC            hdc;
 	PAINTSTRUCT ps;
 
 	RECT    rect;
-	static    TCHAR *szBuffer;        //缓冲区
-	static    TCHAR szPath[256];        //文本路径
+	static    TCHAR *szBuffer;        /* 缓冲区 */
 	static  TCHAR szLineNum[32];
 	static    TCHAR szCharNum[32];
 	static int        iLength;
-	int iLineCount, iCharCount;
 
 	switch (message)
 	{
-	case WM_CREATE:
+	case WM_CREATE:/* 创建编辑框和其他组件 */
 		CreateChildWindow(hwnd, hwndChild, lParam);
 		return 0;
 
-	case WM_SIZE:
+	case WM_SIZE:/* 调整窗口大小 */
 		GetClientRect(hwnd, &rect);
-		MoveWindow(hwndChild[ID_EDITBOX], 0, 0, rect.right, rect.bottom - 50, TRUE);        //调整文本编辑区
-		MoveWindow(hwndChild[ID_TXTPATH], 60, rect.bottom - 31, 200, 20, TRUE);            //调整文本路径输入框
-		MoveWindow(hwndChild[ID_SAVEBTN], 280, rect.bottom - 35, 50, 25, TRUE);            //调整保存按钮
-		MoveWindow(hwndChild[ID_CLSBTN], 400, rect.bottom - 35, 50, 25, TRUE);            //调整清空按钮
-		MoveWindow(hwndChild[ID_GROUP], 10, rect.bottom - 50, 330, 48, TRUE);            //调整组合框
+		MoveWindow(hwndChild[ID_EDITBOX], 0, 0, rect.right, rect.bottom - 50, TRUE);/* 调整文本编辑区 */
+		MoveWindow(hwndChild[ID_OUTBTN], 0, rect.bottom - 35, 100, 25, TRUE); /* 调整确定按钮 */
+		MoveWindow(hwndChild[ID_CLSBTN], 100, rect.bottom - 35, 100, 25, TRUE); /* 调整清空按钮 */
 		return 0;
 
-	case WM_PAINT:
+	case WM_PAINT:/* 显示文字 */
 		GetClientRect(hwnd, &rect);
 		hdc = BeginPaint(hwnd, &ps);
-		TextOut(hdc, 20, rect.bottom - 30, TEXT("路径:"), lstrlen(TEXT("路径:")));
 		TextOut(hdc, 500, rect.bottom - 30, szLineNum, lstrlen(szLineNum));
 		EndPaint(hwnd, &ps);
 		return 0;
 
-	case WM_COMMAND:
+	case WM_COMMAND:/* 回应点击事件 */
 		switch (LOWORD(wParam))
 		{
-		case ID_EDITBOX:
-			switch (HIWORD(wParam))
-			{
-			case EN_UPDATE:
-				iLineCount = SendMessage(hwndChild[ID_EDITBOX], EM_GETLINECOUNT, 0, 0);
-				iCharCount = GetWindowTextLength(hwndChild[ID_EDITBOX]);
-				wsprintf(szLineNum, "行数: %i    字符数量: %i", iLineCount, iCharCount);
-				InvalidateRect(hwnd, NULL, FALSE);
-				break;
-			default:
-				break;
-			}
-			return 0;
-
-		case ID_SAVEBTN:
+		case ID_OUTBTN:
 			iLength = GetWindowTextLength(hwndChild[ID_EDITBOX]);
 			if (iLength != 0)
 				szBuffer = malloc(iLength * 2);
 			else
 				return -1;
+			/* 获取文本内容 */
 			GetWindowText(hwndChild[ID_EDITBOX], szBuffer, GetWindowTextLength(hwndChild[ID_EDITBOX]) + 1);
-			if (GetWindowText(hwndChild[ID_TXTPATH], szPath, 256) < 1)
-			{
-				MessageBox(NULL, TEXT("路径不能为空"), TEXT("提示"), MB_OK | MB_ICONINFORMATION);
-				return -1;
-			}
-			SavaInputContent(szPath, szBuffer);
+			OutputContent(szBuffer);
 			return 0;
 
 		case ID_CLSBTN:
@@ -169,54 +144,36 @@ LRESULT CALLBACK MyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
+/* 创建窗口 */
 int CreateChildWindow(HWND hwnd, HWND *hwndChild, LPARAM lParam)
 {
 	HINSTANCE hInst = ((LPCREATESTRUCT)lParam)->hInstance;
 
-	//创建编辑区
+	/* 创建编辑区 */
 	hwndChild[ID_EDITBOX] = CreateWindow(TEXT("edit"), NULL,
 		WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
 		ES_LEFT | ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
 		0, 0, 0, 0,
 		hwnd, (HMENU)ID_EDITBOX, hInst, NULL);
 
-	//路径输入框
-	hwndChild[ID_TXTPATH] = CreateWindow(TEXT("edit"), NULL,
-		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOVSCROLL,
-		0, 0, 0, 0,
-		hwnd, (HMENU)ID_TXTPATH, hInst, NULL);
-
-	//保存按钮
-	hwndChild[ID_SAVEBTN] = CreateWindow(TEXT("button"), TEXT("保存"),
+	/* 保存按钮 */
+	hwndChild[ID_OUTBTN] = CreateWindow(TEXT("button"), TEXT("确定"),
 		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0,
-		hwnd, (HMENU)ID_SAVEBTN, hInst, NULL);
+		hwnd, (HMENU)ID_OUTBTN, hInst, NULL);
 
-	//清空按钮
+	/* 清空按钮 */
 	hwndChild[ID_CLSBTN] = CreateWindow(TEXT("button"), TEXT("清空"),
 		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0,
 		hwnd, (HMENU)ID_CLSBTN, hInst, NULL);
-
-	//组合框
-	hwndChild[ID_GROUP] = CreateWindow(TEXT("button"), NULL,
-		WS_CHILD | WS_VISIBLE | BS_GROUPBOX, 0, 0, 0, 0,
-		hwnd, (HMENU)ID_GROUP, hInst, NULL);
-
 	return 0;
 }
 
-int SavaInputContent(TCHAR *path, TCHAR *content)
+int OutputContent(TCHAR *content)
 {
-	FILE *fSvae;
-
-	fSvae = fopen(path, "w");
-	if (fSvae == NULL)
-	{
-		MessageBox(NULL, TEXT("文件创建失败!"), TEXT("提示"), MB_OK | MB_ICONINFORMATION);
-		return -1;
-	}
-	fputs(content, fSvae);
-	fclose(fSvae);
-	MessageBox(NULL, TEXT("保存成功!"), TEXT("成功"), MB_OK | MB_ICONINFORMATION);
-
+	AllocConsole();
+	FILE* stream;
+	freopen_s(&stream, "CON", "r", stdin);//重定向输入流
+	freopen_s(&stream, "CON", "w", stdout);//重定向输入流
+	printf("%s",content);
 	return 0;
 }

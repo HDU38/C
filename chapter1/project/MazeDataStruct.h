@@ -1,11 +1,11 @@
 #include<stdio.h>
 #include<malloc.h>
+
 #define TRUE 1
 #define FALSE 0
 #define MAZEROWNUM 18/* 迷宫的长和宽 */
 
-
-typedef  int Status;
+typedef int Status;
 
 /* 位置结构 */
 typedef struct Position
@@ -45,6 +45,7 @@ static char maze[MAZEROWNUM][MAZEROWNUM] =
 { 'x' , 'x' , 'x' , 'x' , 'x' , 'x' ,'x' , 'x' , 'x' , 'x' , 'x' , 'x' ,'x' , 'x' , 'x' , 'x' , 'x' , 'x' }
 
 };
+
 /* 初始化一个栈结构 */
 Status InitStack(LinkStack);
 

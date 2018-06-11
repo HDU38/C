@@ -22,7 +22,7 @@ int main(void)
 	if (nScores != 0)
 	{
 		printf("scores为:");
-		for (int i = 0; i < nScores; i++)
+		for (i = 0; i < nScores; i++)
 		{
 			printf("%d ", scores[i]);
 		}
@@ -36,8 +36,9 @@ int main(void)
 }
 int RemoveDuplicates(int *pScores, int nScores)
 {
-	int i;
+	int i, j;
 	int count = 0;/* 记录有效长度 */
+
 	if (pScores == NULL)
 	{
 		printf("指针传入失败");
@@ -48,7 +49,6 @@ int RemoveDuplicates(int *pScores, int nScores)
 		count++;
 		if (*(pScores + i) == *(pScores+i+1))
 		{
-			int j;
 			for (j = i; j < nScores - 1; j++)
 			{
 				*(pScores + j) = *(pScores + j + 1);/* 多余的元素后移*/

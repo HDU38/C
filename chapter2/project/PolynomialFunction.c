@@ -1,19 +1,20 @@
 #include "Polynomial.h"
 
 /* 创建多项式 */
-PolynList  CreatePolyn(void) 
+PolynList  CreatePolyn() 
 {
 	PolynList Head = (PolynList)malloc(sizeof(PolynNode));/* 创建头结点 */
+	PolynList Tail = Head;/* 指向最后一个结点 */
+	PolynList newnode = NULL;/* 新结点 */
+	int i, n;
 	if (Head == NULL)
 		printf("内存分配失败");
-	PolynList Tail = Head;/* 指向最后一个结点 */
 	Tail->next = NULL;/* 最后一个结点指向NULL */
-	int i, n;
 	printf("请输入多项式项数\n");
 	scanf("%d", &n);
 	printf("请分别输入多项式的系数和指数(用空格隔开)\n");
 	for (i = 0; i < n; i++) {
-		PolynList newnode = (PolynList)malloc(sizeof(PolynNode));/* 申请存储空间 */
+		newnode = (PolynList)malloc(sizeof(PolynNode));/* 申请存储空间 */
 		scanf("%d %d", &newnode->coef, &newnode->expn);/* 赋值 */
 		Tail->next = newnode;/* 指向新的结点 */
 		newnode->next = NULL;
@@ -26,18 +27,19 @@ PolynList  CreatePolyn(void)
 /* 删除指定位置的结点,P为头指针,pos为结点位置，位置从1开始 */
 void DeleteNode(PolynList P, int pos)
 {
+	int i;
+	PolynList temp = NULL;/* 临时结点 */
 	if (P == NULL)
 	{
 		printf("多项式为空");
 		return;
 	}
-	int k;
 	/* 遍历获取要删除的结点的前一个结点 */
-	for (k = 1; k <= pos - 1; k++)
+	for (i = 1; i <= pos - 1; i++)
 	{
 		P = P->next;
 	}
-	PolynList temp = P;
+	temp = P;
 	/* 要删除的结点 */
 	P = P->next;
 	/* 由1→2→3变为1→3 */
@@ -83,12 +85,15 @@ PolynList AddPolyn(PolynList PA, PolynList PB)
 	PolynList hb = PB->next;/* 同上 */
 	PolynList hc = (PolynList)malloc(sizeof(PolynNode));/* 创建新的多项式链表的头指针*/
 	PolynList tail = hc;
+	PolynList temp = NULL;/* 临时结点 */
+	int sum;/* 系数和 */
 	tail->next = NULL;
 	while (ha&&hb)
 	{
-		PolynList temp = (PolynList)malloc(sizeof(PolynNode));
+		temp = (PolynList)malloc(sizeof(PolynNode));
+		/* 多项式PA的指数小于多项式PB的指数 */
 		if (ha->expn < hb->expn)
-		{/* 多项式PA的指数小于多项式PB的指数 */
+		{
 			temp->expn = ha->expn;/* 储存PA的数据 */
 			temp->coef = ha->coef;
 			ha = ha->next;/* PA链表结点后移 */
@@ -96,8 +101,9 @@ PolynList AddPolyn(PolynList PA, PolynList PB)
 			temp->next = NULL;
 			tail = temp;
 		}
+		/* 多项式PA的指数大于多项式PB的指数 */
 		else if (ha->expn > hb->expn)
-		{/* 多项式PA的指数大于多项式PB的指数 */
+		{
 			temp->expn = hb->expn;/* 储存PB的数据 */
 			temp->coef = hb->coef;
 			hb = hb->next;/* PB链表结点后移 */
@@ -107,9 +113,10 @@ PolynList AddPolyn(PolynList PA, PolynList PB)
 		}
 		else
 		{/* 多项式PA的指数等于多项式PB的指数 */
-			int sum = ha->coef + hb->coef;/* 求和 */
+			sum = ha->coef + hb->coef;/* 求和 */
+			/* 不等于0就直接储存相加后的数据 */
 			if (sum != 0)
-			{/* 不等于0就直接储存相加后的数据 */
+			{
 				temp->coef = ha->coef + hb->coef;
 				temp->expn = ha->expn;
 				ha = ha->next;/*PA，PB的结点同时后移 */
@@ -118,8 +125,9 @@ PolynList AddPolyn(PolynList PA, PolynList PB)
 				temp->next = NULL;
 				tail = temp;
 			}
+			/* 系数相加为0则不必储存 */
 			else
-			{/* 系数相加为0则不必储存 */
+			{
 				free(temp);/* 释放结点 */
 				ha = ha->next;/* 后移 */
 				hb = hb->next;
@@ -129,7 +137,7 @@ PolynList AddPolyn(PolynList PA, PolynList PB)
 	/* 多项式项数可能不等，因为PA和PB只有一个链表可能有数据未使用，因此直接储存剩下的数据即可 */
 	while (ha)
 	{
-		PolynList temp = (PolynList)malloc(sizeof(PolynNode));
+		temp = (PolynList)malloc(sizeof(PolynNode));
 		temp->coef = ha->coef;
 		temp->expn = ha->expn;
 		ha = ha->next;
@@ -139,8 +147,88 @@ PolynList AddPolyn(PolynList PA, PolynList PB)
 	}
 	while (hb)
 	{
-		PolynList temp = (PolynList)malloc(sizeof(PolynNode));
+		temp = (PolynList)malloc(sizeof(PolynNode));
 		temp->coef = hb->coef;
+		temp->expn = hb->expn;
+		hb = hb->next;
+		tail->next = temp;
+		temp->next = NULL;
+		tail = temp;
+	}
+	return hc;
+}
+
+/* 多项式相减,PA为多项式A的头指针，PB为多项式B的头指针 */
+PolynList SubPolyn(PolynList PA, PolynList PB)
+{
+	PolynList ha = PA->next;/* 指向头结点*/
+	PolynList hb = PB->next;/* 同上 */
+	PolynList hc = (PolynList)malloc(sizeof(PolynNode));/* 创建新的多项式链表的头指针*/
+	PolynList tail = hc;
+	PolynList temp = NULL;/* 临时结点 */
+	int sub;/* 系数差 */
+	tail->next = NULL;
+	while (ha&&hb)
+	{
+		temp = (PolynList)malloc(sizeof(PolynNode));
+		/* 多项式PA的指数小于多项式PB的指数 */
+		if (ha->expn < hb->expn)
+		{
+			temp->expn = ha->expn;/* 储存PA的数据 */
+			temp->coef = ha->coef;
+			ha = ha->next;/* PA链表结点后移 */
+			tail->next = temp;
+			temp->next = NULL;
+			tail = temp;
+		}
+		/* 多项式PA的指数大于多项式PB的指数 */
+		else if (ha->expn > hb->expn)
+		{
+			temp->expn = hb->expn;/* 储存PB的数据 */
+			temp->coef = hb->coef;
+			hb = hb->next;/* PB链表结点后移 */
+			tail->next = temp;
+			temp->next = NULL;
+			tail = temp;
+		}
+		else
+		{/* 多项式PA的指数等于多项式PB的指数 */
+			sub = ha->coef - hb->coef;/* 求差 */
+			/* 不等于0就直接储存相加后的数据 */
+			if (sub != 0)
+			{
+				temp->coef = ha->coef - hb->coef;
+				temp->expn = ha->expn;
+				ha = ha->next;/*PA，PB的结点同时后移 */
+				hb = hb->next;
+				tail->next = temp;
+				temp->next = NULL;
+				tail = temp;
+			}
+			/* 系数相加为0则不必储存 */
+			else
+			{
+				free(temp);/* 释放结点 */
+				ha = ha->next;/* 后移 */
+				hb = hb->next;
+			}
+		}
+	}
+	/* 多项式项数可能不等，因为PA和PB只有一个链表可能有数据未使用，因此直接储存剩下的数据即可 */
+	while (ha)
+	{
+		temp = (PolynList)malloc(sizeof(PolynNode));
+		temp->coef = ha->coef;
+		temp->expn = ha->expn;
+		ha = ha->next;
+		tail->next = temp;
+		temp->next = NULL;
+		tail = temp;
+	}
+	while (hb)
+	{
+		temp = (PolynList)malloc(sizeof(PolynNode));
+		temp->coef = -hb->coef;
 		temp->expn = hb->expn;
 		hb = hb->next;
 		tail->next = temp;
@@ -158,13 +246,15 @@ PolynList MultiPolyn(PolynList PA, PolynList PB)
 	PolynList hb = PB->next;
 	PolynList hc = (PolynList)malloc(sizeof(PolynNode));
 	PolynList tail = hc;
+	PolynList HbTemp = NULL;/* 多项式B链表的临时结点 */
+	PolynList temp;/* 多项式C链表的临时结点 */
 	tail->next = NULL;
 	for (; ha != NULL; ha = ha->next)/* 遍历多项式PA的所有项 */
 	{
-		PolynList HbTemp = PB->next;
-		while (HbTemp)/* 与多项式PB所有项相乘 */
+		HbTemp = PB->next;
+		while (HbTemp!=NULL)/* 与多项式PB所有项相乘 */
 		{
-			PolynList temp = (PolynList)malloc(sizeof(PolynNode));
+			temp = (PolynList)malloc(sizeof(PolynNode));
 			temp->coef = (ha->coef)*(HbTemp->coef);
 			temp->expn = ha->expn + HbTemp->expn;
 			tail->next = temp;
@@ -183,15 +273,17 @@ PolynList MultiPolyn(PolynList PA, PolynList PB)
 */
 void SortPolyn(PolynList P)
 {
+	PolynList temp;
+	PolynList MinExpnNode;/* 储存多项式系数最小的项所在的结点指针 */
+	int min;/* 记录系数的最小值 */
 	P = P->next;/* 头结点 */
-	while (P)
-
+	while (P!=NULL)
 	{
-		PolynList temp = P;/* 遍历P之后的所有结点，防止修改P的值 */
-		int min = temp->expn;/* 记录系数的最小值 */
-		PolynList MinExpnNode = temp;/* 储存多项式系数最小的项所在的结点指针 */
+		temp = P;/* 遍历P之后的所有结点，防止修改P的值 */
+		min = temp->expn;
+		MinExpnNode = temp;
 
-		while (temp)/* temp为NULL说明遍历结束 */
+		while (temp!=NULL)/* temp为NULL说明遍历结束 */
 		{
 			if (temp->expn < min)
 			{
@@ -232,9 +324,9 @@ void RemoveZero(PolynList P)
 {
 	PolynList HEAD = P;
 	PolynList temp = P;
-	P = P->next;
 	int pos = 0;
-	while (P)
+	P = P->next;
+	while (P!=NULL)
 	{
 		temp = P->next;
 		pos++;

@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+
 #define MAXLENGTH 1000
 
 void insertSort(int *, int);
@@ -21,12 +22,13 @@ int main()
 /* 插入排序,a为数组第一个元素的指针,length为数组长度 */
 void insertSort(int *a, int length)
 {
+	int i, k;
 	if (a == NULL)
 	{
 		printf("数组指针传入失败");
 		return;
 	}
-	int i;
+
 	/* 从第二个元素遍历到最后一个元素 */
 	for (i = 1; i<length; i++)
 	{
@@ -41,7 +43,6 @@ void insertSort(int *a, int length)
 			swap(a + j, a + j - 1);
 	}
 	/* 排序完毕，遍历一遍数组 */
-	int k;
 	for (k = 0; k<length; k++)
 		printf("%d ", a[k]);
 	printf("\n");

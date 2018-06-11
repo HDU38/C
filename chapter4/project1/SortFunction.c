@@ -1,15 +1,14 @@
-#include<stdio.h>
 #include "SortFunction.h"
 
 /* 交换元素 */
 int swap(int *pa, int *pb)
 {
+	int temp;
 	if (pa == NULL || pb == NULL)
 	{
 		printf("交换失败");
 		return FALSE;
 	}
-	int temp;
 	temp = *pa;
 	*pa = *pb;
 	*pb = temp;
@@ -19,26 +18,30 @@ int swap(int *pa, int *pb)
 /* 遍历数组,a为数组第一个元素的指针,length为数组长度 */
 int traverse(int *pa, int length)
 {
+	int i;
 	if (pa == NULL)
 	{
 		printf("数组指针传入失败");
 		return FALSE;
 	}
-	int i;
 	for (i = 0; i < length; i++)
 		printf("%d ", *(pa + i));
 	return TRUE;
 }
 
 /* 
-快速排序,a为数组第一个元素的指针，lo为最左
-的元素的数组下标,hi为最右的元素的数组下标 
+*  快速排序,a为数组第一个元素的指针，lo为最左
+*  的元素的数组下标,hi为最右的元素的数组下标 
 */
 int quicksort(int *pa, int lo, int hi)
 {
+	/*i 跟踪左边元素的位置，j跟踪右边元素的位置*/
+	int i = lo;
+	int j = hi + 1;
+	int temp = 0;
 	/*
-	当切分元素恰好在最左或最右处时,lo会大于hi，当子列表只有一个元素时，lo=hi，
-	这些情况都不应该执行排序
+	* 当切分元素恰好在最左或最右处时,lo会大于hi，当子列表只有一个元素时，lo=hi，
+	*  这些情况都不应该执行排序
 	*/
 	if (pa == NULL)
 	{
@@ -51,13 +54,8 @@ int quicksort(int *pa, int lo, int hi)
 		return TRUE;
 	};
 
-	/*i 跟踪左边元素的位置，j跟踪右边元素的位置*/
-	int i = lo;
-	int j = hi + 1;
-
-
 	/* 切分元素的值 */
-	int temp = *(pa + lo);
+	temp = *(pa + lo);
 
 	while (TRUE)
 	{
@@ -80,21 +78,17 @@ int quicksort(int *pa, int lo, int hi)
 	}
 
 	/* 切分结束，temp归位 */
-
 	swap(pa + lo, pa + j);
 
 	/* 切分左边的数组 */
-
 	quicksort(pa, lo, j - 1);
 
 	/* 切分右边的数组 */
-
 	quicksort(pa, j + 1, hi);
 
 	return TRUE;
 
 }
-
 /* 检测是否排序成功,a为数组第一个元素的指针,length为数组长度 */
 int assert(int *pa, int length)
 {

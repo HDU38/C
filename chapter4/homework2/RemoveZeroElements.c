@@ -21,7 +21,7 @@ int main(void)
 	if (nScores != 0) 
 	{
 		printf("scores为:");
-		for (int i = 0; i < nScores; i++)
+		for (i = 0; i < nScores; i++)
 		{
 			printf("%d ", scores[i]);
 		}
@@ -38,7 +38,7 @@ int main(void)
 /* 移除数组中值为0的元素，并返回有效长度，scores为数组指针，nScores为数组原本长度 */
 int RemoveZeroElements(int *pScores, int nScores)
 {
-	int i;
+	int i,j;
 	int count = 0;/* 记录有效长度 */
 	if (pScores == NULL)
 	{
@@ -50,10 +50,8 @@ int RemoveZeroElements(int *pScores, int nScores)
 		count++;
 		if (*(pScores + i) == 0)
 		{
-			int j;
 			for (j = i; j < nScores-1; j++)
-			{
-				/* 0之后的元素前移 */
+			{				/* 0之后的元素前移 */
 				*(pScores + j) = *(pScores + j + 1);
 			}
 			/* 数组长度减小 */

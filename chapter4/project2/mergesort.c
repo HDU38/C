@@ -1,5 +1,3 @@
-#include<stdlib.h>
-#include<time.h>
 #include "mergesort.h"
 
 int TO_BE_SORTED_ARRAY[MAX_ARRAY_LENGTH];/* ´ýÅÅÐòµÄÊý×é */
