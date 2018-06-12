@@ -1,8 +1,4 @@
-#include "drawstruct.h"
-#include <windows.h>
-
-BOOL isMove = FALSE; // 移动标志
-BOOL isChangeSize = FALSE; // 缩放标志
+#include "CADDataStruct.h"
 
 /* 临时指向被选中的图形所在的结点 */
 /* 椭圆 */
@@ -14,6 +10,12 @@ LineNode *LineTemp = NULL;
 /* 文本 */
 TextNode *TextTemp = NULL;
 
+BOOL isMove = FALSE; /* 移动标志 */
+BOOL isChangeSize = FALSE; /* 缩放标志 */
+
+DWORD WINDOWSWIDTH = GetSystemMetrics(SM_CXSCREEN);/* 宽 */
+DWORD WINDOWSHEIGHT = GetSystemMetrics(SM_CYSCREEN);/* 长 */
+
 /* 初始化所有图形链表 */
 GraphList list = { InitEllipseList(),InitRectangleList(),InitLineList(),InitTextList() };
 
@@ -21,7 +23,9 @@ GraphList list = { InitEllipseList(),InitRectangleList(),InitLineList(),InitText
 RectangleT sideRectangle = { 10,130,30,100,FALSE,FALSE };/* 长方形 */
 EllipseT sideEllipse = { 10,160,30,140,FALSE,FALSE };/* 椭圆 */
 LineT sideLine = { 10,190,30,170,FALSE,FALSE };/* 直线 */
-SideBar sideBar = { sideRectangle,sideEllipse,sideLine };/* 文本 */
+RECT sideRec = { 10, 220, 30, 200 };
+TextT sideText = { "T",&sideRec,DT_CENTER | DT_VCENTER | DT_SINGLELINE,FALSE,FALSE };/* 文本 */
+SideBar sideBar = { sideRectangle,sideEllipse,sideLine,sideText };
 
 int main()
 {
@@ -33,13 +37,275 @@ int main()
 	settextcolor(BLACK);/* 初始化文本颜色 */
 	cleardevice();
 	DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);/* 画出工具栏 */
+	MOUSEMSG m;
 	while (true)
 	{
 		if (_kbhit())
-			KeyboardEventProcess(); /* 键盘消息 */
-		if (MouseHit()) MouseEventProcess();/* 鼠标消息 */
+		{
+			KeyboardEventProcess(_getch()); /* 键盘消息 */
+		}
+		if (MouseHit())
+		{
+			m = GetMouseMsg();
+			MouseEventProcess(m);/* 鼠标消息 */
+		}
 	}
 	return 0;
+}
+
+/* 获取一条鼠标消息并处理
+*/
+void KeyboardEventProcess(int keyboardMsg)
+{
+	switch (keyboardMsg)
+	{
+	case 'a':/* a: 随机生成直线 */
+		LineGenertator();
+		break;
+	case 's':/* s: 随机生成矩形*/
+		RectangleGenertator();
+		break;
+	case 'd':/* d: 随机生成椭圆 */
+		EllipseGenertator();
+		break;
+	case 'w':/* w: 随机生成文本 */
+		TextGenertator();
+		break;
+	default:
+		break;
+	}
+	DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+}
+
+/* 处理鼠标消息
+*/
+void MouseEventProcess(MOUSEMSG m)
+{
+	LineT *lptr = NULL;/* 直线 */
+	RectangleT *rptr = NULL;/* 矩形 */
+	EllipseT *eptr = NULL;/* 椭圆 */
+	TextT *textr = NULL;/* 文本 */
+	int dx;
+	int dy;
+	{
+		switch (m.uMsg)
+		{
+		case WM_LBUTTONDOWN:
+			if (FindSideGraph(m.x, m.y) > 0)/* 首先检查用户是否点击了工具栏 */
+			{
+				switch (FindSideGraph(m.x, m.y))
+				{
+				case LINETAG:
+					LineGenertator();
+					break;
+				case RECTANGLETAG:
+					RectangleGenertator();
+					break;
+				case ELLIPSETAG:
+					EllipseGenertator();
+					break;
+				case TEXTTAG:
+					TextGenertator();
+					break;
+				default:
+					break;
+				}
+				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+			}
+			/* 寻找用户点击的图形 */
+			TextTemp = FindTextN(list.TextList, m.x, m.y);
+			if (TextTemp != NULL)
+			{
+				isMove = TRUE; /* 左键按下，进入移动状态 */
+				TextTemp->text->isMove = TRUE;
+				break;
+			}
+			RectangleTemp = FindRectangle(list.RectangleList, m.x, m.y);
+			if (RectangleTemp != NULL)
+			{
+				isMove = TRUE; /* 左键按下，进入移动状态 */
+				RectangleTemp->rectangle->isMove = TRUE;
+				break;
+			}
+			EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
+			if (EllipseTemp != NULL)
+			{
+				isMove = TRUE; /* 左键按下，进入移动状态 */
+				EllipseTemp->ellipse->isMove = TRUE;
+				break;
+			}
+			LineTemp = FindLine(list.LineList, m.x, m.y);
+			if (LineTemp != NULL)
+			{
+				isMove = TRUE; /* 左键按下，进入移动状态 */
+				LineTemp->line->isMove = TRUE;
+				break;
+			}
+		case WM_MOUSEMOVE: /* 移动图形 */
+			if (m.mkLButton)
+			{
+				if (isMove == TRUE)
+				{
+					if (TextTemp != NULL && TextTemp->text->isMove == TRUE)
+					{
+						dx = (TextTemp->text->pRect->right - TextTemp->text->pRect->left) / 2;
+						dy = (TextTemp->text->pRect->top - TextTemp->text->pRect->bottom) / 2;
+						TextTemp->text->pRect->left = m.x - dx;
+						TextTemp->text->pRect->top = m.y + dy;
+						TextTemp->text->pRect->right = m.x + dx;
+						TextTemp->text->pRect->bottom = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+					if (RectangleTemp != NULL && RectangleTemp->rectangle->isMove == TRUE)
+					{
+						dx = (RectangleTemp->rectangle->right - RectangleTemp->rectangle->left) / 2;
+						dy = (RectangleTemp->rectangle->top - RectangleTemp->rectangle->bottom) / 2;
+						RectangleTemp->rectangle->left = m.x - dx;
+						RectangleTemp->rectangle->top = m.y + dy;
+						RectangleTemp->rectangle->right = m.x + dx;
+						RectangleTemp->rectangle->bottom = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+					EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
+					if (EllipseTemp != NULL && EllipseTemp->ellipse->isMove == TRUE)
+					{
+						dx = (EllipseTemp->ellipse->right - EllipseTemp->ellipse->left) / 2;
+						dy = (EllipseTemp->ellipse->top - EllipseTemp->ellipse->bottom) / 2;
+						EllipseTemp->ellipse->left = m.x - dx;
+						EllipseTemp->ellipse->top = m.y + dy;
+						EllipseTemp->ellipse->right = m.x + dx;
+						EllipseTemp->ellipse->bottom = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+					LineTemp = FindLine(list.LineList, m.x, m.y);
+					if (LineTemp != NULL && LineTemp->line->isMove == TRUE)
+					{
+						dx = (LineTemp->line->x2 - LineTemp->line->x1) / 2;
+						dy = (LineTemp->line->y2 - LineTemp->line->y1) / 2;
+						LineTemp->line->x1 = m.x - dx;
+						LineTemp->line->y2 = m.y + dy;
+						LineTemp->line->x2 = m.x + dx;
+						LineTemp->line->y1 = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+				}
+			}
+			if (m.mkRButton)/* 缩放 */
+			{
+				if (isChangeSize == TRUE)
+				{
+					if (RectangleTemp != NULL && RectangleTemp->rectangle->isChangeSize == TRUE)
+					{
+						dx = (RectangleTemp->rectangle->right - RectangleTemp->rectangle->left) / 2;
+						dy = (RectangleTemp->rectangle->top - RectangleTemp->rectangle->bottom) / 2;
+						RectangleTemp->rectangle->right = m.x + dx;
+						RectangleTemp->rectangle->bottom = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+					EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
+					if (EllipseTemp != NULL && EllipseTemp->ellipse->isChangeSize == TRUE)
+					{
+						dx = (EllipseTemp->ellipse->right - EllipseTemp->ellipse->left) / 2;
+						dy = (EllipseTemp->ellipse->top - EllipseTemp->ellipse->bottom) / 2;
+						EllipseTemp->ellipse->right = m.x + dx;
+						EllipseTemp->ellipse->bottom = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+					LineTemp = FindLine(list.LineList, m.x, m.y);
+					if (LineTemp != NULL && LineTemp->line->isChangeSize == TRUE)
+					{
+						dx = (LineTemp->line->x2 - LineTemp->line->x1) / 2;
+						dy = (LineTemp->line->y2 - LineTemp->line->y1) / 2;
+						LineTemp->line->x2 = m.x + dx;
+						LineTemp->line->y1 = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+					TextTemp = FindTextN(list.TextList, m.x, m.y);
+					if (TextTemp != NULL && TextTemp->text->isChangeSize == TRUE)
+					{
+						dx = (TextTemp->text->pRect->right - TextTemp->text->pRect->left) / 2;
+						dy = (TextTemp->text->pRect->top - TextTemp->text->pRect->bottom) / 2;
+						TextTemp->text->pRect->right = m.x + dx;
+						TextTemp->text->pRect->bottom = m.y - dy;
+						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+						break;
+					}
+				}
+			}
+			break;
+		case WM_RBUTTONDOWN:/* 缩放标志 */
+			RectangleTemp = FindRectangle(list.RectangleList, m.x, m.y);
+			if (RectangleTemp != NULL)
+			{
+				isChangeSize = TRUE; /* 右键按下，进入缩放状态 */
+				RectangleTemp->rectangle->isChangeSize = TRUE;
+				break;
+			}
+			EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
+			if (EllipseTemp != NULL)
+			{
+				isChangeSize = TRUE; /* 右键按下，进入缩放状态 */
+				EllipseTemp->ellipse->isChangeSize = TRUE;
+				break;
+			}
+			LineTemp = FindLine(list.LineList, m.x, m.y);
+			if (LineTemp != NULL)
+			{
+				isChangeSize = TRUE; /* 右键按下，进入缩放状态 */
+				LineTemp->line->isChangeSize = TRUE;
+				break;
+			}
+			TextTemp = FindTextN(list.TextList, m.x, m.y);
+			if (TextTemp != NULL)
+			{
+				isChangeSize = TRUE; /* 右键按下，进入缩放状态 */
+				TextTemp->text->isChangeSize = TRUE;
+				break;
+			}
+			break;
+		case WM_LBUTTONDBLCLK:/* 删除图形 */
+			if (RectangleTemp != NULL)
+			{
+				RectangleListDelete(list.RectangleList, RectangleTemp);
+				RectangleTemp = NULL;
+				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+				break;
+			}
+			if (EllipseTemp != NULL)
+			{
+				EllipseListDelete(list.EllipseList, EllipseTemp);
+				EllipseTemp = NULL;
+				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+				break;
+			}
+			if (LineTemp != NULL)
+			{
+				LineListDelete(list.LineList, LineTemp);
+				LineTemp = NULL;
+				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+				break;
+			}
+			if (TextTemp != NULL)
+			{
+				TextListDelete(list.TextList, TextTemp);
+				TextTemp = NULL;
+				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
+				break;
+			}
+			break;
+		case WM_RBUTTONDBLCLK:
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 /* 产生随机的x坐标
@@ -47,7 +313,7 @@ int main()
 int RandomX()
 {
 	srand((unsigned)time(NULL) + rand());/* 制作种子 */
-	int x = MIN_X + (rand() % (MAX_X + MIN_X - 1)) - 1;/* 产生随机坐标 */
+	int x = (rand() % (WINDOWSWIDTH - 1)) - 1;/* 产生随机坐标 */
 	return x;
 }
 
@@ -56,7 +322,7 @@ int RandomX()
 int RandomY()
 {
 	srand((unsigned)time(NULL) + rand());/* 制作种子 */
-	int y = MIN_Y + (rand() % (MAX_Y + MIN_Y - 1)) - 1;/* 产生随机坐标 */
+	int y = (rand() % (WINDOWSHEIGHT - 1)) - 1;/* 产生随机坐标 */
 	return y;
 }
 
@@ -66,6 +332,8 @@ int RandomY()
 */
 void DrawAll(RectangleNode *RectangleHead, EllipseNode *EllipseHead, LineNode *LineHead, TextNode *TextHead)
 {
+	BeginBatchDraw();
+	cleardevice();
 	RectangleNode *RectangleHeadTemp = RectangleHead;
 	EllipseNode *EllipseHeadTemp = EllipseHead;
 	LineNode *LineHeadTemp = LineHead;
@@ -97,6 +365,7 @@ void DrawAll(RectangleNode *RectangleHead, EllipseNode *EllipseHead, LineNode *L
 		drawtext(TextHeadTemp->text->str,
 			TextHeadTemp->text->pRect,
 			TextHeadTemp->text->uFormat);
+	FlushBatchDraw();
 }
 
 /* 产生随机大小的矩形
@@ -107,14 +376,14 @@ void RectangleGenertator()
 	int y1 = RandomY();
 	int x2 = RandomX();
 	int y2 = RandomY();
-	RectangleT *rptr = (RectangleT*)malloc(sizeof(RectangleT));
-	rptr->top = y1 > y2 ? y1 : y2;
-	rptr->bottom = y1 < y2 ? y1 : y2;
-	rptr->left = x1 < x2 ? x1 : x2;
-	rptr->right = x1 > x2 ? x1 : x2;
+	RectangleT *rptr = (RectangleT*)malloc(sizeof(RectangleT));/* 申请存储空间 */
+	rptr->top = MAX(y1, y2);
+	rptr->bottom = MIN(y1, y2);
+	rptr->left = MIN(x1, x2);
+	rptr->right = MAX(x1, x2);
 	rptr->isMove = FALSE;
 	rptr->isChangeSize = FALSE;
-	RectangleListInsert(list.RectangleList, rptr);
+	RectangleListInsert(list.RectangleList, rptr);/* 插入链表 */
 }
 
 /* 产生随机大小的椭圆
@@ -126,10 +395,10 @@ void EllipseGenertator()
 	int x2 = RandomX();
 	int y2 = RandomY();
 	EllipseT *eptr = (EllipseT*)malloc(sizeof(EllipseT));
-	eptr->top = y1 > y2 ? y1 : y2;
-	eptr->bottom = y1 < y2 ? y1 : y2;
-	eptr->left = x1 < x2 ? x1 : x2;
-	eptr->right = x1 > x2 ? x1 : x2;
+	eptr->top = MAX(y1, y2);
+	eptr->bottom = MIN(y1, y2);
+	eptr->left = MIN(x1, x2);
+	eptr->right = MAX(x1, x2);
 	eptr->isMove = FALSE;
 	eptr->isChangeSize = FALSE;
 	EllipseListInsert(list.EllipseList, eptr);
@@ -139,15 +408,14 @@ void EllipseGenertator()
 */
 void LineGenertator()
 {
-	// 产生随机坐标
 	int x1 = RandomX();
 	int y1 = RandomY();
 	int x2 = RandomX();
 	int y2 = RandomY();
 	LineT *lptr = (LineT*)malloc(sizeof(LineT));
-	lptr->x1 = x1 < x2 ? x1 : x2;
+	lptr->x1 = MIN(x1, x2);/* 规定x1小于x2 */
+	lptr->x2 = MAX(x1, x2);
 	lptr->y1 = y1;
-	lptr->x2 = x1 > x2 ? x1 : x2;
 	lptr->y2 = y2;
 	lptr->isMove = FALSE;
 	lptr->isChangeSize = FALSE;
@@ -158,328 +426,24 @@ void LineGenertator()
 */
 void TextGenertator()
 {
-	int x1 = RandomX();
-	int y1 = RandomY();
-	int x2 = RandomX();
-	int y2 = RandomY();
-	char  s[10];
-	int i = 0, j = 0;
-	InputBox(s, 10,_T("请输入内容"));
-	TextT *textr = (TextT*)malloc(sizeof(TextT));
-	RECT *rec = (RECT*)malloc(sizeof(RECT));
-	rec->top = y1 > y2 ? y1 : y2;
-	rec->bottom = y1 < y2 ? y1 : y2;
-	rec->left = x1 < x2 ? x1 : x2;
-	rec->right = x1 > x2 ? x1 : x2;
-	textr->pRect = rec;
-	strcpy(textr->str,s);
+	char s[20];/* 字符串 */
+	InputBox(s, 20, _T("请输入内容(不多于20个字符)"));/* 输入 */
+	TextT *textr = (TextT*)malloc(sizeof(TextT));/* 文本类型 */
+	strcpy(textr->str,s);/* 复制字符串 */
 	textr->uFormat = DT_CENTER | DT_VCENTER | DT_SINGLELINE;
+	RECT *rec = (RECT*)malloc(sizeof(RECT));/* 文本框 */
+	int x1 = RandomX();
+	int x2 = x1 + textwidth(textr->str);/* x1加上文本宽度 */
+	int y1 = RandomY();
+	int y2 = y1 + textheight(textr->str);/* y1加上文本高度 */
+	rec->top = y2;
+	rec->bottom = y1;
+	rec->left = x1;
+	rec->right = x2;
+	textr->pRect = rec;
 	textr->isMove = FALSE;
 	textr->isChangeSize = FALSE;
 	TextListInsert(list.TextList, textr);
-}
-
-/* 处理键盘消息
-*/
-void KeyboardEventProcess()
-{
-	switch (_getch())
-	{
-		/* a: 随机生成直线 */
-	case 'a':
-		LineGenertator();
-		break;
-		/* s: 随机生成矩形*/
-	case 's':
-		RectangleGenertator();
-		break;
-		/* d: 随机生成椭圆 */
-	case 'd':
-		EllipseGenertator();
-		break;
-		/* w: 随机生成空的文本对象 */
-	case 'w':
-		TextGenertator();
-		break;
-	default:
-		break;
-	}
-	DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-}
-
-/* 处理鼠标消息
-*/
-void MouseEventProcess()
-{
-	MOUSEMSG m = GetMouseMsg();	/* 定义鼠标消息 */
-
-	LineT *lptr = NULL;/* 直线 */
-	RectangleT *rptr = NULL;/* 矩形 */
-	EllipseT *eptr = NULL;/* 椭圆 */
-	TextT *textr = NULL;
-	int x1, y1, x2, y2;
-	int dx;
-	int dy;
-	{
-		switch (m.uMsg)
-		{
-		case WM_LBUTTONDOWN:/* 移动标志 */
-			if (FindSideGraph(m.x, m.y) > 0)
-				switch (FindSideGraph(m.x, m.y))
-				{
-				case 1:/* s: 随机生成矩形*/
-					x1 = RandomX();
-					y1 = RandomY();
-					x2 = RandomX();
-					y2 = RandomY();
-					rptr = (RectangleT*)malloc(sizeof(RectangleT));
-					rptr->top = y1 > y2 ? y1 : y2;
-					rptr->bottom = y1 < y2 ? y1 : y2;
-					rptr->left = x1 < x2 ? x1 : x2;
-					rptr->right = x1 > x2 ? x1 : x2;
-					rptr->isMove = FALSE;
-					rptr->isChangeSize = FALSE;
-					RectangleListInsert(list.RectangleList, rptr);
-					DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-					break;
-				case 2: /* d: 随机生成椭圆 */
-					x1 = RandomX();
-					y1 = RandomY();
-					x2 = RandomX();
-					y2 = RandomY();
-					eptr = (EllipseT*)malloc(sizeof(EllipseT));
-					eptr->top = y1 > y2 ? y1 : y2;
-					eptr->bottom = y1 < y2 ? y1 : y2;
-					eptr->left = x1 < x2 ? x1 : x2;
-					eptr->right = x1 > x2 ? x1 : x2;
-					eptr->isMove = FALSE;
-					eptr->isChangeSize = FALSE;
-					EllipseListInsert(list.EllipseList, eptr);
-					DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-					break;
-				case 3:/* a: 随机生成直线 */
-					x1 = RandomX();
-					y1 = RandomY();
-					x2 = RandomX();
-					y2 = RandomY();
-					lptr = (LineT*)malloc(sizeof(LineT));
-					lptr->x1 = x1 < x2 ? x1 : x2;
-					lptr->y1 = y1;
-					lptr->x2 = x1 > x2 ? x1 : x2;
-					lptr->y2 = y2;
-					lptr->isMove = FALSE;
-					lptr->isChangeSize = FALSE;
-					LineListInsert(list.LineList, lptr);
-					DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-					break;
-				default:
-					break;
-				}
-			TextTemp = FindTextN(list.TextList, m.x, m.y);
-			if (TextTemp != NULL)
-			{
-				isMove = TRUE; // 左键按下，进入移动状态
-				TextTemp->text->isMove = true;
-				break;
-			}
-			RectangleTemp = FindRectangle(list.RectangleList, m.x, m.y);
-			if (RectangleTemp != NULL)
-			{
-				isMove = TRUE; // 左键按下，进入移动状态
-				RectangleTemp->rectangle->isMove = true;
-				break;
-			}
-			EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
-			if (EllipseTemp != NULL)
-			{
-				isMove = TRUE; // 左键按下，进入移动状态
-				EllipseTemp->ellipse->isMove = true;
-				break;
-			}
-			LineTemp = FindLine(list.LineList, m.x, m.y);
-			if (LineTemp != NULL)
-			{
-				isMove = TRUE; // 左键按下，进入移动状态
-				LineTemp->line->isMove = true;
-				break;
-			}
-		case WM_MOUSEMOVE: /* 移动图形 */
-			if (m.mkLButton)
-			{
-				if (isMove == TRUE)
-				{
-					if (TextTemp != NULL && TextTemp->text->isMove == TRUE)
-					{
-						dx = (TextTemp->text->pRect->right - TextTemp->text->pRect->left) / 2;
-						dy = (TextTemp->text->pRect->top - TextTemp->text->pRect->bottom) / 2;
-						TextTemp->text->pRect->left = m.x - dx;
-						TextTemp->text->pRect->top = m.y + dy;
-						TextTemp->text->pRect->right = m.x + dx;
-						TextTemp->text->pRect->bottom = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-					if (RectangleTemp != NULL && RectangleTemp->rectangle->isMove == TRUE)
-					{
-						dx = (RectangleTemp->rectangle->right - RectangleTemp->rectangle->left) / 2;
-						dy = (RectangleTemp->rectangle->top - RectangleTemp->rectangle->bottom) / 2;
-						RectangleTemp->rectangle->left = m.x - dx;
-						RectangleTemp->rectangle->top = m.y + dy;
-						RectangleTemp->rectangle->right = m.x + dx;
-						RectangleTemp->rectangle->bottom = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-					EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
-					if (EllipseTemp != NULL)
-					{
-						dx = (EllipseTemp->ellipse->right - EllipseTemp->ellipse->left) / 2;
-						dy = (EllipseTemp->ellipse->top - EllipseTemp->ellipse->bottom) / 2;
-						EllipseTemp->ellipse->left = m.x - dx;
-						EllipseTemp->ellipse->top = m.y + dy;
-						EllipseTemp->ellipse->right = m.x + dx;
-						EllipseTemp->ellipse->bottom = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-					LineTemp = FindLine(list.LineList, m.x, m.y);
-					if (LineTemp != NULL)
-					{
-						dx = (LineTemp->line->x2 - LineTemp->line->x1) / 2;
-						dy = (LineTemp->line->y2 - LineTemp->line->y1) / 2;
-						LineTemp->line->x1 = m.x - dx;
-						LineTemp->line->y2 = m.y + dy;
-						LineTemp->line->x2 = m.x + dx;
-						LineTemp->line->y1 = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-				}
-			}
-			if (m.mkRButton)/* 缩放 */
-			{
-				if (isChangeSize == TRUE)
-				{
-					if (RectangleTemp != NULL && RectangleTemp->rectangle->isMove == TRUE)
-					{
-						dx = (RectangleTemp->rectangle->right - RectangleTemp->rectangle->left) / 2;
-						dy = (RectangleTemp->rectangle->top - RectangleTemp->rectangle->bottom) / 2;
-						RectangleTemp->rectangle->right = m.x + dx;
-						RectangleTemp->rectangle->bottom = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-					EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
-					if (EllipseTemp != NULL)
-					{
-						dx = (EllipseTemp->ellipse->right - EllipseTemp->ellipse->left) / 2;
-						dy = (EllipseTemp->ellipse->top - EllipseTemp->ellipse->bottom) / 2;
-						EllipseTemp->ellipse->right = m.x + dx;
-						EllipseTemp->ellipse->bottom = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-					LineTemp = FindLine(list.LineList, m.x, m.y);
-					if (LineTemp != NULL)
-					{
-						dx = (LineTemp->line->x2 - LineTemp->line->x1) / 2;
-						dy = (LineTemp->line->y2 - LineTemp->line->y1) / 2;
-						LineTemp->line->x2 = m.x + dx;
-						LineTemp->line->y1 = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-					TextTemp = FindTextN(list.TextList, m.x, m.y);
-					if (TextTemp != NULL)
-					{
-						dx = (TextTemp->text->pRect->right - TextTemp->text->pRect->left) / 2;
-						dy = (TextTemp->text->pRect->top - TextTemp->text->pRect->bottom) / 2;
-						TextTemp->text->pRect->right = m.x + dx;
-						TextTemp->text->pRect->bottom = m.y - dy;
-						cleardevice();
-						DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-						break;
-					}
-				}
-			}
-			break;
-		case WM_RBUTTONDOWN:/* 缩放标志 */
-			RectangleTemp = FindRectangle(list.RectangleList, m.x, m.y);
-			if (RectangleTemp != NULL)
-			{
-				isChangeSize = TRUE; // 右键按下，进入缩放状态
-				RectangleTemp->rectangle->isMove = true;
-				break;
-			}
-			EllipseTemp = FindEllipse(list.EllipseList, m.x, m.y);
-			if (EllipseTemp != NULL)
-			{
-				isChangeSize = TRUE; // 右键按下，进入缩放状态
-				EllipseTemp->ellipse->isMove = true;
-				break;
-			}
-			LineTemp = FindLine(list.LineList, m.x, m.y);
-			if (LineTemp != NULL)
-			{
-				isChangeSize = TRUE; // 右键按下，进入缩放状态
-				LineTemp->line->isMove = true;
-				break;
-			}
-			TextTemp = FindTextN(list.TextList, m.x, m.y);
-			if (TextTemp != NULL)
-			{
-				isChangeSize = TRUE; // 右键按下，进入缩放状态
-				TextTemp->text->isMove = true;
-				break;
-			}
-			break;
-		case WM_LBUTTONDBLCLK:/* 删除图形 */
-			if (RectangleTemp != NULL)
-			{
-				RectangleListDelete(list.RectangleList, RectangleTemp);
-				RectangleTemp = NULL;
-				cleardevice();
-				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-				break;
-			}
-			if (EllipseTemp != NULL)
-			{
-				EllipseListDelete(list.EllipseList, EllipseTemp);
-				EllipseTemp = NULL;
-				cleardevice();
-				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-				break;
-			}
-			if (LineTemp != NULL)
-			{
-				LineListDelete(list.LineList, LineTemp);
-				LineTemp = NULL;
-				cleardevice();
-				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-				break;
-			}
-			if (TextTemp != NULL)
-			{
-				TextListDelete(list.TextList, TextTemp);
-				TextTemp = NULL;
-				cleardevice();
-				DrawAll(list.RectangleList, list.EllipseList, list.LineList, list.TextList);
-				break;
-			}
-			break;
-		case WM_RBUTTONDBLCLK:
-			break;
-		default:
-			break;
-		}
-	}
 }
 
 /* 画出工具栏
@@ -501,6 +465,11 @@ void DrawSideBar()
 		sideBar.line.y1,
 		sideBar.line.x2,
 		sideBar.line.y2);
+	drawtext(
+		sideBar.text.str,
+		sideBar.text.pRect,
+		sideBar.text.uFormat);
+
 }
 
 /* 当用户点击工具栏的图形时,该函数查
@@ -529,6 +498,12 @@ int FindSideGraph(int x, int y)
 		sideBar.line.y1 >= y &&
 		sideBar.line.y2 <= y)
 		return LINETAG;
+	else if (
+		sideBar.text.pRect->left <= x &&
+		sideBar.text.pRect->right >= x &&
+		sideBar.text.pRect->bottom <= y &&
+		sideBar.text.pRect->top >= y)
+		return TEXTTAG;
 	else return GRAPHNOTFOUND;
 
 }
@@ -693,10 +668,9 @@ LineNode* FindLine(LineNode *Head, int x, int y)
 		LineT *pline = temp->line;
 		if (pline->x1 != pline->x2)
 		{
-			double k = (pline->y2 - pline->y1) / (pline->x2 - pline->x1);// 直线斜率
+			double k = (double)(pline->y2 - pline->y1) / (double)(pline->x2 - pline->x1);// 直线斜率
 			if (pline->x1 <= x &&
-				pline->x2 >= x &&
-				(
+				pline->x2 >= x && (
 				(pline->y1 + k * (x - pline->x1 + 55) >= y &&
 					pline->y1 + k * (x - pline->x1 - 55) <= y) ||
 					(pline->y1 + k * (x - pline->x1 + 55) <= y &&

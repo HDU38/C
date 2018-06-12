@@ -1,5 +1,5 @@
-#ifndef _DRAWSTRUCT_H_
-#define _DRAWSTRUCT_H
+#ifndef _CADDATASTRUCT_H_
+#define _CADDATASTRUCT_H
 
 #include<stdio.h>
 #include<malloc.h>
@@ -10,8 +10,8 @@
 #include "graphics.h"
 #include "time.h"
 
-DWORD WINDOWSWIDTH = GetSystemMetrics(SM_CXSCREEN);
-DWORD WINDOWSHEIGHT = GetSystemMetrics(SM_CYSCREEN);
+#define MAX(a, b) a > b ? a : b
+#define MIN(a, b) a < b ? a : b
 
 #define TRUE 1
 #define FALSE 0
@@ -20,12 +20,8 @@ DWORD WINDOWSHEIGHT = GetSystemMetrics(SM_CYSCREEN);
 #define RECTANGLETAG 1
 #define ELLIPSETAG 2
 #define LINETAG 3
+#define TEXTTAG 4
 #define GRAPHNOTFOUND -1
-
-#define MIN_X 0
-#define MAX_X WINDOWSWIDTH
-#define MIN_Y 0
-#define MAX_Y WINDOWSHEIGHT
 
 
 /* 矩形链表结点 */
@@ -91,7 +87,7 @@ typedef struct LineT
 /* 文本类型 */
 typedef struct TextT 
 {
-	char str[10];// 字符串
+	char str[20];// 字符串
 	RECT* pRect;// 矩形区域
 	UINT uFormat;// 文本格式
 	int isMove;// 移动标志
@@ -113,6 +109,7 @@ typedef struct SideBar
 	struct RectangleT rectangle;
 	struct EllipseT ellipse;
 	struct LineT line;
+	struct TextT text;
 }SideBar;
 
 /* 初始化一个链表 */
@@ -164,10 +161,10 @@ void DrawAll(RectangleNode *, EllipseNode *, LineNode *, TextNode *);
 void DrawSideBar();
 
 /* 回应鼠标事件 */
-void MouseEventProcess();
+void MouseEventProcess(MOUSEMSG mouseMsg);
 
 /* 回应键盘事件*/
-void KeyboardEventProcess();
+void KeyboardEventProcess(int keyboardMsg);
 
 /* 获取工具栏的图形 */
 int FindSideGraph(int x, int y);

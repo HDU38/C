@@ -1,12 +1,13 @@
 #include <windows.h>
 #include<stdio.h>
 
-#define ID_EDITBOX 1 /* 文本编辑框控件 */
-#define ID_OUTBTN 2 /* 确定按钮 */
-#define ID_CLSBTN 3 /* 清空编辑区按钮 */
-
+#define ID_EDITBOX 0 /* 文本编辑框控件 */
+#define ID_OUTBTN 1 /* 确定按钮 */
+#define ID_CLSBTN 2 /* 清空编辑区按钮 */
 
 LRESULT CALLBACK MyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+int CreateChildWindow(HWND hwnd, HWND *hwndChild, LPARAM lParam);
+int OutputContent(TCHAR *content);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
@@ -83,15 +84,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 LRESULT CALLBACK MyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	static        HWND hwndChild[3];
-	HDC            hdc;
+	static HWND hwndChild[3];
+	HDC hdc;
 	PAINTSTRUCT ps;
 
-	RECT    rect;
-	static    TCHAR *szBuffer;        /* 缓冲区 */
-	static  TCHAR szLineNum[32];
-	static    TCHAR szCharNum[32];
-	static int        iLength;
+	RECT rect;
+	static TCHAR *szBuffer;        /* 缓冲区 */
+	static TCHAR szLineNum[32];
+	static TCHAR szCharNum[32];
+	static int iLength;
 
 	switch (message)
 	{
@@ -116,18 +117,21 @@ LRESULT CALLBACK MyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:/* 回应点击事件 */
 		switch (LOWORD(wParam))
 		{
-		case ID_OUTBTN:
+		case ID_OUTBTN:/* 输出 */
 			iLength = GetWindowTextLength(hwndChild[ID_EDITBOX]);
 			if (iLength != 0)
 				szBuffer = malloc(iLength * 2);
 			else
 				return -1;
 			/* 获取文本内容 */
-			GetWindowText(hwndChild[ID_EDITBOX], szBuffer, GetWindowTextLength(hwndChild[ID_EDITBOX]) + 1);
-			OutputContent(szBuffer);
+			if (szBuffer != 0)
+			{
+				GetWindowText(hwndChild[ID_EDITBOX], szBuffer, GetWindowTextLength(hwndChild[ID_EDITBOX]) + 1);
+				OutputContent(szBuffer);/* 输出至控制台 */
+			}
 			return 0;
 
-		case ID_CLSBTN:
+		case ID_CLSBTN:/* 清空 */
 			SetWindowText(hwndChild[ID_EDITBOX], TEXT(""));
 			return 0;
 
@@ -136,11 +140,10 @@ LRESULT CALLBACK MyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 
-	case WM_DESTROY:
+	case WM_DESTROY:/* 关闭 */
 		PostQuitMessage(0);
 		return 0;
 	}
-
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
@@ -168,12 +171,13 @@ int CreateChildWindow(HWND hwnd, HWND *hwndChild, LPARAM lParam)
 	return 0;
 }
 
+/* 输出 */
 int OutputContent(TCHAR *content)
 {
 	AllocConsole();
 	FILE* stream;
-	freopen_s(&stream, "CON", "r", stdin);//重定向输入流
-	freopen_s(&stream, "CON", "w", stdout);//重定向输入流
+	freopen_s(&stream, "CON", "r", stdin);/* 重定向输入流 */
+	freopen_s(&stream, "CON", "w", stdout);/* 重定向输入流 */
 	printf("%s",content);
 	return 0;
 }

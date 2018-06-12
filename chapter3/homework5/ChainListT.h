@@ -1,12 +1,10 @@
 #include<stdio.h>
 #include<malloc.h>
-#include "conio.h"
 #include <stdlib.h>
-#include <math.h>
 
 #define True 1
 #define False 0
-#define PI 3.14159265358979323846264338327950288419716939937510
+#define PI 3.1415926535897932384626433832795028841971693993751058209
 
 typedef double DataType;
 

@@ -1,10 +1,10 @@
-#include "ADT.h"
+#include "ChainListT.h"
 
 /* 初始化一个链表 */
 Node* InitList()
 {
-	Node *Head = (Node*)malloc(sizeof(Node));// 申请存储空间，得到头结点
-	if (!Head)
+	Node *Head = (Node*)malloc(sizeof(Node));/* 申请存储空间，得到头指针 */
+	if (Head == NULL)
 	{
 		printf("初始化错误");
 		return NULL;
@@ -34,12 +34,14 @@ int ListLength(Node *Head)
 	}
 	return total;
 }
-/* 往指定位置插入数据 */
+
+/* 往指定位置插入数据,pos从1开始计数 */
 int ListInsert(Node *Head, int pos, DataType item)
 {
 	Node *temp = Head;
+	Node *t = NULL;
 	int i = 0;
-	while (temp)
+	while (temp != NULL)
 	{
 		if (i + 1 == pos)
 			break;
@@ -50,7 +52,7 @@ int ListInsert(Node *Head, int pos, DataType item)
 	{
 		return False;
 	}
-	Node *t = (Node*)malloc(sizeof(Node));
+	t = (Node*)malloc(sizeof(Node));
 	t->data = item;
 	t->next = temp->next;
 	temp->next = t;
@@ -62,10 +64,11 @@ Node* FindItem(Node *H, int pos)
 {
 	Node *p = H->next;
 	int temppos = 0;
-	while (p)
+	while (p!=NULL)
 	{
 		if (++temppos == pos)
 			return p;
 		p = p->next;
 	}
+	return NULL;
 }

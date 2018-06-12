@@ -7,18 +7,17 @@
 #define PI 3.141592653589793
 
 /* 沿当前方向画线，长度为distance，当distance为负数时后退 */
-void forward(double distance);
-
+void forward(int distance);
 /* 顺时针旋转角度angle，角度单位为DEG，当angle为负数时逆时针旋转 */
 void turn(double angle);
-
 /* 沿当前方向移动笔（不画线），长度为distance，当distance为负数时后退 */
-void move(double distance);
-
+void move(int distance);
 /* 画出一个六边形 */
-void drawWidget(double r);
+void drawWidget(int r);
 
-double CURRENT_ANGLE = 0;/* 当前角度 */
+/* 当前角度 */
+double CURRENT_ANGLE = 0;
+
 
 int main()
 {
@@ -29,21 +28,21 @@ int main()
 	setbkcolor(WHITE);/*  初始化背景颜色 */
 	settextcolor(BLACK);/* 初始化文本颜色 */
 	cleardevice();
-	moveto(screenWidth/2, screenHeight/2);
+	moveto(screenWidth/2, screenHeight/2);/* 移动至屏幕中心 */
 	double dangle = PI / 9;/* 每次旋转的角度 */
 	for (int i = 0; i < 18; i++)
 	{
-		drawWidget(159.63);
+		drawWidget(160);
 		CURRENT_ANGLE += dangle;
 	}
-	_getch();
+	if (_getch()) exit(0);
 }
 
 /* 沿当前方向画线，长度为distance，当distance为负数时后退 */
-void forward(double distance)
+void forward(int distance)
 {
-	int dx = distance * cos(CURRENT_ANGLE);
-	int dy = distance * sin(CURRENT_ANGLE);
+	double dx = (double)distance * cos(CURRENT_ANGLE);
+	double dy = (double)distance * sin(CURRENT_ANGLE);
 	linerel(dx, dy);
 }
 
@@ -54,18 +53,19 @@ void turn(double angle)
 }
 
 /* 沿当前方向移动笔（不画线），长度为distance，当distance为负数时后退 */
-void move(double distance)
+void move(int distance)
 {
-	double dx = distance * cos(CURRENT_ANGLE);
-	double dy = distance * sin(CURRENT_ANGLE);
+	double dx = (double)distance * cos(CURRENT_ANGLE);
+	double dy = (double)distance * sin(CURRENT_ANGLE);
 	moverel(dx, dy);
 }
 
-/* 画出一个六边形 */
-void drawWidget(double r)
+/* 画出一个六边形,r为边长 */
+void drawWidget(int r)
 {
+	int i;
 	forward(r);
-	for (int i = 0; i < 6; i++)
+	for (i = 0; i < 6; i++)
 	{
 		turn(-PI / 3);
 		if (i == 2)
