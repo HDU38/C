@@ -4,9 +4,9 @@
 
 typedef struct PolynNode 
 {
-	int coef;//系数	
-	int expn;//指数
-	struct PolynNode *next;//下一个结点
+	int coef;/* 系数 */	
+	int expn;/* 指数 */
+	struct PolynNode *next;/* 下一个结点 */
 }PolynNode, *PolynList;
 
 
@@ -21,7 +21,7 @@ PolynList MultiPolyn(PolynList PA, PolynList PB);
 /* 多项式按按指数大小排序 */
 void SortPolyn(PolynList PC);
 /* 交换值 */
-void swap(int *a, int *b);
+void Swap(int *a, int *b);
 /* 遍历多项式 */
 void PolynTraverse(PolynList P);
 /* 删除指定位置的结点 */

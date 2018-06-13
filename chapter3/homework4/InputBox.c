@@ -174,8 +174,8 @@ int CreateChildWindow(HWND hwnd, HWND *hwndChild, LPARAM lParam)
 /* 输出 */
 int OutputContent(TCHAR *content)
 {
+	FILE* stream = NULL;
 	AllocConsole();
-	FILE* stream;
 	freopen_s(&stream, "CON", "r", stdin);/* 重定向输入流 */
 	freopen_s(&stream, "CON", "w", stdout);/* 重定向输入流 */
 	printf("%s",content);

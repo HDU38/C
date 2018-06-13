@@ -51,31 +51,59 @@ void DeleteNode(PolynList P, int pos)
 /* 遍历多项式，P为头指针 */
 void PolynTraverse(PolynList P)
 {
-	if (P == NULL)
+	PolynList temp = P;
+	int count = 0;/* 控制输出行数 */
+	if (temp->next == NULL)/* 多项式为空 */
 	{
-		printf("多项式为空");
+		printf("0");
 		return;
 	}
-	P = P->next;/* 头结点 */
-	while (P->next != NULL) 
+	while ((temp = temp->next) != NULL && temp->next != NULL)/* 确保不是最后一项 */
 	{
-		if (P->expn != 0)
+		if (temp->next->coef > 0)/* 下一项的系数大于0 */
 		{
-			if (P->next->coef > 0)
-				printf("%dx^%d + ", P->coef, P->expn);/* 为了形式好看 */
+			if (temp->coef == 1 && temp->expn == 1)/* 系数指数都等于1 */
+				printf("x + ");
+			else if (temp->expn == 1)/* 指数等于1 */
+				printf("%dx + ", temp->coef);
+			else if (temp->coef == 1)/* 系数等于1 */
+				printf("x^%d + ", temp->expn);
+			else if (temp->expn == 0)/* 指数等于0 */
+				printf("%d + ", temp->coef);
 			else
-				printf("%dx^%d ", P->coef, P->expn);
+				printf("%dx^%d + ", temp->coef, temp->expn);
+			count++;
+			if (count % 5 == 0 && count != 0)
+				printf("\n");
 		}
-		else
+		else/* 下一项的系数小于0 */
 		{
-			if (P->next->coef > 0)
-				printf("%d+ ", P->coef);
+			if (temp->coef == 1 && temp->expn == 1)/* 系数指数都等于1 */
+				printf("x ");
+			else if (temp->expn == 1)/* 指数等于1 */
+				printf("%dx ", temp->coef);
+			else if (temp->coef == 1)/* 系数等于1 */
+				printf("x^%d ", temp->expn);
+			else if (temp->expn == 0)/* 指数等于0 */
+				printf("%d ", temp->coef);
 			else
-				printf("%d+ ", P->coef);
+				printf("%dx^%d ", temp->coef, temp->expn);
+			count++;
+			if (count % 5 == 0 && count != 0)
+				printf("\n");
 		}
-		P = P->next;
 	}
-	printf("%dx^%d\n", P->coef, P->expn);
+	/* 输出最后一项 */
+	if (temp->coef == 1 && temp->expn == 1)/* 系数指数都等于1 */
+		printf("x\n");
+	else if (temp->expn == 1)/* 指数等于1 */
+		printf("%dx\n ", temp->coef);
+	else if(temp->coef == 1)/* 系数等于1 */
+		printf("x^%d\n", temp->expn);
+	else if (temp->expn == 0)/* 指数等于0 */
+		printf("%d\n", temp->coef);
+	else
+		printf("%dx^%d\n", temp->coef, temp->expn);
 }
 
 /* 多项式相加,PA为多项式A的头指针，PB为多项式B的头指针 */
@@ -155,6 +183,7 @@ PolynList AddPolyn(PolynList PA, PolynList PB)
 		temp->next = NULL;
 		tail = temp;
 	}
+	tail->next = NULL;
 	return hc;
 }
 
@@ -168,7 +197,7 @@ PolynList SubPolyn(PolynList PA, PolynList PB)
 	PolynList temp = NULL;/* 临时结点 */
 	int sub;/* 系数差 */
 	tail->next = NULL;
-	while (ha&&hb)
+	while (ha!=NULL&&hb!=NULL)
 	{
 		temp = (PolynList)malloc(sizeof(PolynNode));
 		/* 多项式PA的指数小于多项式PB的指数 */
@@ -185,7 +214,7 @@ PolynList SubPolyn(PolynList PA, PolynList PB)
 		else if (ha->expn > hb->expn)
 		{
 			temp->expn = hb->expn;/* 储存PB的数据 */
-			temp->coef = hb->coef;
+			temp->coef = -hb->coef;
 			hb = hb->next;/* PB链表结点后移 */
 			tail->next = temp;
 			temp->next = NULL;
@@ -215,7 +244,7 @@ PolynList SubPolyn(PolynList PA, PolynList PB)
 		}
 	}
 	/* 多项式项数可能不等，因为PA和PB只有一个链表可能有数据未使用，因此直接储存剩下的数据即可 */
-	while (ha)
+	while (ha!=NULL)
 	{
 		temp = (PolynList)malloc(sizeof(PolynNode));
 		temp->coef = ha->coef;
@@ -225,7 +254,7 @@ PolynList SubPolyn(PolynList PA, PolynList PB)
 		temp->next = NULL;
 		tail = temp;
 	}
-	while (hb)
+	while (hb!=NULL)
 	{
 		temp = (PolynList)malloc(sizeof(PolynNode));
 		temp->coef = -hb->coef;
@@ -235,6 +264,7 @@ PolynList SubPolyn(PolynList PA, PolynList PB)
 		temp->next = NULL;
 		tail = temp;
 	}
+	tail->next = NULL;
 	return hc;
 }
 
@@ -292,8 +322,8 @@ void SortPolyn(PolynList P)
 			}
 			temp = temp->next;
 		}
-		swap(&(P->expn), &(MinExpnNode->expn));
-		swap(&(P->coef), &(MinExpnNode->coef));
+		Swap(&(P->expn), &(MinExpnNode->expn));
+		Swap(&(P->coef), &(MinExpnNode->coef));
 		P = P->next;
 	}
 
@@ -340,7 +370,7 @@ void RemoveZero(PolynList P)
 }
 
 /* 交换值 */
-void swap(int *a, int *b)
+void Swap(int *a, int *b)
 {
 	int temp;
 	temp = *a;

@@ -7,6 +7,9 @@ FILE   *stream;
 
 int main()
 {
+	int i;
+	double start, end, tcost;
+
 	/* 打开文件 */
 	FILE *fpRead = fopen("array.txt", "r");
 	/* 打开失败 */
@@ -16,12 +19,10 @@ int main()
 	}
 
 	/* 创建一个长度为一百万的数组 */
-	for (int i = 0; i<1000000; i++)
+	for (i = 0; i<1000000; i++)
 	{
 		fscanf(fpRead, "%d ", &a[i]);
 	}
-
-	double start, end, tcost;
 
 	start = clock();/* 开始时间 */
 	if (quicksort(a, 0, sizeof(a) / sizeof(a[0])) == 0)

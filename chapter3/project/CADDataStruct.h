@@ -15,83 +15,84 @@
 
 #define TRUE 1
 #define FALSE 0
-#define PI 3.14159265358979323846264338327950288419716939937510
 
-#define RECTANGLETAG 1
-#define ELLIPSETAG 2
-#define LINETAG 3
-#define TEXTTAG 4
-#define GRAPHNOTFOUND -1
+#define RECTANGLETAG 1/* 工具栏-矩形标签 */
+#define ELLIPSETAG 2/* 工具栏-椭圆标签 */
+#define LINETAG 3/* 工具栏-直线标签 */
+#define TEXTTAG 4/* 工具栏-文本标签 */
+#define GRAPHNOTFOUND -1/* 未找到图形 */
 
 
 /* 矩形链表结点 */
 typedef struct RectangleNode
 {
 	struct RectangleT *rectangle;
-	struct RectangleNode *next;//next为指向下一结点的指针
+	struct RectangleNode *next;/* next为指向下一结点的指针 */
 }RectangleNode;
 
 /* 椭圆链表结点 */
 typedef struct EllipseNode
 {
 	struct EllipseT *ellipse;
-	struct EllipseNode *next;//next为指向下一结点的指针
+	struct EllipseNode *next;/* next为指向下一结点的指针 */
 }EllipseNode;
 
 /* 直线链表结点 */
 typedef struct LineNode
 {
 	struct LineT *line;
-	struct LineNode *next;//next为指向下一结点的指针
+	struct LineNode *next;/* next为指向下一结点的指针 */
 }LineNode;
 
 /* 文本链表结点 */
 typedef struct TextNode
 {
 	struct TextT *text;
-	struct TextNode *next;
+	struct TextNode *next;/* next为指向下一结点的指针 */
 }TextNode;
 
 /* 椭圆类型 */
 typedef struct EllipseT
 {
-	int left; // 椭圆外切矩形左部的x坐标
-	int top; // 椭圆外切矩形上部的y坐标 top>bottom
-	int right; // 椭圆外切矩形右部的x坐标
-	int bottom; // 椭圆外切矩形下部的y坐标
-	int isMove;// 移动标志
-	int isChangeSize;// 缩放标志
+	int left; /* 椭圆外切矩形左部的x坐标 */
+	int top; /* 椭圆外切矩形上部的y坐标 top>bottom */
+	int right; /* 椭圆外切矩形右部的x坐标 */
+	int bottom; /* 椭圆外切矩形下部的y坐标 */
+	int isMove;/* 移动标志 */
+	int isChangeSize;// 缩放标志 */
 }EllipseT;
 
 /* 矩形类型 */
 typedef struct RectangleT{
-	int left; // 矩形左部 x 坐标
-	int top;// 矩形上部 x 坐标top>bottom
-	int right;// 矩形右部 x 坐标
-	int bottom;// 矩形下部 x 坐标
-	int isMove;// 移动标志
-	int isChangeSize;// 缩放标志
+	int left; /* 矩形左部 x 坐标 */
+	int top;/* 矩形上部 x 坐标top>bottom */
+	int right;/* 矩形右部 x 坐标 */
+	int bottom;/* 矩形下部 x 坐标 */
+	int isMove;/* 移动标志 */
+	int isChangeSize;/* 缩放标志 */
 }RectangleT;
 
 /* 直线类型 */
 typedef struct LineT
 {
 	int x1;
-	int y1; // 第一个点坐标,规定x1<x2
+	int y1; /* 第一个点坐标,规定x1<x2 */
 	int x2;
-	int y2; // 第二个点坐标
-	int isMove;// 移动标志
-	int isChangeSize;// 缩放标志
+	int y2; /* 第二个点坐标 */
+	int isMove;/* 移动标志 */
+	int isChangeSize;/* 缩放标志 */
 }LineT;
 
 /* 文本类型 */
 typedef struct TextT 
 {
-	char str[20];// 字符串
-	RECT* pRect;// 矩形区域
-	UINT uFormat;// 文本格式
-	int isMove;// 移动标志
-	int isChangeSize;// 缩放标志
+	char str[20];/* 字符串 */
+	RECT* pRect;/* 矩形区域 */
+	UINT uFormat;/* 文本格式 */
+	int isMove;/* 移动标志 */
+	int isChangeSize;/* 缩放标志 */
+	int nHeight;/* 字体高 */
+	int nWidth;/* 字体宽 */
 }TextT;
 
 /* 所有链表 */
