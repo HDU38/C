@@ -14,6 +14,13 @@
 #define BOARD_HEIGHT GRID_WIDTH * 9
 #define CHESS_RADIUS GRID_WIDTH / 2 - 4
 
+#define ROOKS_TAG     0
+#define KNIGHTS_TAG   1 
+#define ELEPHANTS_TAG 2 
+#define ADVISORS_TAG  3 
+#define KING_TAG      4
+#define CANNONS_TAG   5
+#define PAWNS_TAG     6
 
 
 #define RED_TAG 1
@@ -33,6 +40,14 @@ typedef struct chessList
 	CHESS *chess;
 	chessList *next;
 }chessNode;
+
+typedef struct stackNode
+{
+	chessNode *node;/* 因为后面涉及位置方向的变化，因此储存指向位置结构的指针更加方便 */
+	stackNode *next;
+	int x;
+	int y;
+}stackNode;
 
 void Setup();/* 画出棋盘 */
 
@@ -56,3 +71,18 @@ void DrawBoard();
 int *CalCoordinate(int x,int y);
 int InPalace(int x, int y);
 void Eat(int x, int y);
+int IsCorrect(chessNode* node, int x, int y);
+void GenerateMoves();
+/* 初始化一个栈结构 */
+int InitStack(stackNode*);
+
+/* 栈顶出栈 */
+stackNode* Pop(stackNode* top);
+
+/* 判断栈是否为空 */
+int IsEmpty(stackNode*);
+
+/* 将数据压入栈顶 */
+int Push(stackNode*, stackNode*);
+
+void AI();
