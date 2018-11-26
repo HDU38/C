@@ -174,23 +174,70 @@ void MoveChess(chessNode* node,int x, int y,int colorTag)
 	chessNode *destinationChess = NULL;
 	int preX = node->chess->x;
 	int preY = node->chess->y;
-	int min, max;
 	int i = 0;
 	int chessNum;
 	x = CalCoordinate(x-GRID_WIDTH, y-GRID_WIDTH)[0];
 	y = CalCoordinate(x-GRID_WIDTH, y-GRID_WIDTH)[1];
+	if (x < GRID_WIDTH || x>9 * GRID_WIDTH || y < GRID_WIDTH || y>10 * GRID_WIDTH || (x == preX && y == preY)) return;
 	switch (node->chess->index)
 	{
 	case 0:/* 车 */
 		if (!(y == preY) && !(x == preX))/* 只能走直线 */
 			return;
+		/* 查看中间是否有棋子 */
+		if (y == preY)
+			for (i = MIN(preX, x) + GRID_WIDTH; i < MAX(preX, x); i += GRID_WIDTH)
+				if (FindChessNode(i, y, BLACK_TAG) || FindChessNode(i, y, RED_TAG)) return;
+		if (x == preX)
+			for (i = MIN(preY, y) + GRID_WIDTH; i < MAX(preY, y); i += GRID_WIDTH)
+				if (FindChessNode(x, i, BLACK_TAG) || FindChessNode(x, i, RED_TAG)) return;
 		break;
 	case 1:/* 马 */
-		if (!(abs(x - preX) == GRID_WIDTH && abs(y - preY) == 2*GRID_WIDTH)&&
-			!(abs(x - preX) == 2*GRID_WIDTH && abs(y - preY) == GRID_WIDTH))
-			return;
+		/* 向东南或西南 */
+		if (((x - preX) == GRID_WIDTH && (y - preY) == 2 * GRID_WIDTH) ||
+			((x - preX) == -GRID_WIDTH && (y - preY) == 2 * GRID_WIDTH))
+		{
+			if (FindChessNode(preX, preY + GRID_WIDTH, BLACK_TAG) || FindChessNode(preX, preY + GRID_WIDTH, RED_TAG)) return;
+		}
+		/* 向西北或东北 */
+		else if (((x - preX) == -GRID_WIDTH && (y - preY) == -2 * GRID_WIDTH)||
+			((x - preX) == GRID_WIDTH && (y - preY) == -2 * GRID_WIDTH))
+		{
+			if (FindChessNode(preX, preY - GRID_WIDTH, BLACK_TAG) || FindChessNode(preX, preY - GRID_WIDTH, RED_TAG)) return;
+		}
+		else return;
 		break;
 	case 2:/* 象 */
+		switch (g_status)
+		{
+		case RED_TAG:
+			if (y < 6 * GRID_WIDTH) return;
+			break;
+		case BLACK_TAG:
+			if (y > 5 * GRID_WIDTH) return;
+			break;
+		}
+		/* 向东南 */
+		if (((x - preX) == 2*GRID_WIDTH && (y - preY) == 2 * GRID_WIDTH))
+		{
+			if (FindChessNode(preX+GRID_WIDTH, preY + GRID_WIDTH, BLACK_TAG) || FindChessNode(preX+GRID_WIDTH, preY + GRID_WIDTH, RED_TAG)) return;
+		}
+		/* 向西南 */
+		else if ((x - preX) == -2*GRID_WIDTH && (y - preY) == 2 * GRID_WIDTH)
+		{
+			if (FindChessNode(preX - GRID_WIDTH, preY + GRID_WIDTH, BLACK_TAG) || FindChessNode(preX - GRID_WIDTH, preY + GRID_WIDTH, RED_TAG)) return;
+		}
+		/* 向西北 */
+		else if (((x - preX) == -2*GRID_WIDTH && (y - preY) == -2 * GRID_WIDTH))
+		{
+			if (FindChessNode(preX - GRID_WIDTH, preY - GRID_WIDTH, BLACK_TAG) || FindChessNode(preX - GRID_WIDTH, preY - GRID_WIDTH, RED_TAG)) return;
+		}
+		/* 向东北 */
+		else if ((x - preX) == GRID_WIDTH && (y - preY) == -2 * GRID_WIDTH)
+		{
+			if (FindChessNode(preX + GRID_WIDTH, preY - GRID_WIDTH, BLACK_TAG) || FindChessNode(preX + GRID_WIDTH, preY - GRID_WIDTH, RED_TAG)) return;
+		}
+		else return;
 		break;
 	case 3:/* 士 */
 		if (!InPalace(x, y)) return;
@@ -202,57 +249,50 @@ void MoveChess(chessNode* node,int x, int y,int colorTag)
 		if (!InPalace(x, y)) return;
 		if ((abs(x - preX) == GRID_WIDTH && y == preY) ||
 			(abs(y - preY) == GRID_WIDTH && x == preX))/* 只走一步 */
-			switch (g_status)
-			{
-			case RED_TAG:
-				if (destinationChess = FindChessNode(x, y, BLACK_TAG)) Eat(destinationChess);
-				break;
-			case BLACK_TAG:
-				if (destinationChess = FindChessNode(x, y, RED_TAG)) Eat(destinationChess);
-				break;
-			}
 		break;
 	case 5:/* 炮 */
 		if (!(y == preY) && !(x == preX))/* 只能走直线 */
 			return;
-		if ((abs(x - preX) == GRID_WIDTH && y == preY) ||
-			(abs(y - preY) == GRID_WIDTH && x == preX))/* 只走一步 */
-			goto move;
-		switch (g_status)
-		{
-		case RED_TAG:
-			if (!(destinationChess=FindChessNode(x, y, BLACK_TAG))) return;
-			break;
-		case BLACK_TAG:
-			if (!(destinationChess=FindChessNode(x, y, RED_TAG))) return;
-			break;
-		}
 		chessNum = 0;
 		if (y == preY)
 		{
-			min = MIN(preX, x);
-			max = MAX(preX, x);
-			for (i = min + GRID_WIDTH; i < max; i += GRID_WIDTH)
+			for (i = MIN(preX, x) + GRID_WIDTH; i < MAX(preX, x); i += GRID_WIDTH)
 			{
 				if (FindChessNode(i, y, BLACK_TAG) || FindChessNode(i, y, RED_TAG)) 
 					chessNum++;
 			}
-			if (chessNum != 1) return;
 		}
 		if (x == preX)
 		{
-			min = MIN(preY, y);
-			max = MAX(preY, y);
-			for (i = min + GRID_WIDTH; i < max; i += GRID_WIDTH)
+			for (i = MIN(preY, y) + GRID_WIDTH; i < MAX(preY, y); i += GRID_WIDTH)
 			{
 				if (FindChessNode(x, i, BLACK_TAG) || FindChessNode(x, i, RED_TAG))
 					chessNum++;
 			}
-			if (chessNum != 1) return;
 		}
-		Eat(destinationChess);
+		if (chessNum != 1 && chessNum != 0)
+			return;
+		if (chessNum == 0)
+		{
+			if ((destinationChess = FindChessNode(x, y, BLACK_TAG)) ||
+				(destinationChess = FindChessNode(x, y, RED_TAG)))
+				return;
+		}
+		if (chessNum == 1)
+		{
+			switch (g_status)
+			{
+			case RED_TAG:
+				if (!(destinationChess = FindChessNode(x, y, BLACK_TAG))) return;
+				break;
+			case BLACK_TAG:
+				if (!(destinationChess = FindChessNode(x, y, RED_TAG))) return;
+				break;
+			}
+		}
 		break;
 	case 6:/* 兵 */
+		/* 只能向前、左、右走一步 */
 		switch (g_status)
 		{
 		case RED_TAG:
@@ -266,10 +306,9 @@ void MoveChess(chessNode* node,int x, int y,int colorTag)
 				return;
 			break;
 		}
-		if (destinationChess = FindChessNode(x, y, BLACK_TAG)) Eat(destinationChess);
 		break;
 	}
-	move:
+	Eat(x, y);
 	if (colorTag == RED_TAG) 
 	{
 		MakeRedChess(chess, x, y, node->chess->index);/* 在指定位置画一个棋子 */
@@ -357,6 +396,10 @@ void DrawBoard()
 			rectangle((i + 1)*GRID_WIDTH, (j + 1)*GRID_WIDTH, (i + 2)*GRID_WIDTH, (j + 2)*GRID_WIDTH);
 		}
 	}
+	line(4 * GRID_WIDTH, GRID_WIDTH, 6 * GRID_WIDTH, 3 * GRID_WIDTH);
+	line(6 * GRID_WIDTH, GRID_WIDTH, 4 * GRID_WIDTH, 3 * GRID_WIDTH);
+	line(4 * GRID_WIDTH, 8 * GRID_WIDTH, 6 * GRID_WIDTH, 10 * GRID_WIDTH);
+	line(6 * GRID_WIDTH, 8 * GRID_WIDTH, 4 * GRID_WIDTH, 10 * GRID_WIDTH);
 }
 
 int *CalCoordinate(int x, int y)
@@ -413,16 +456,20 @@ int InPalace(int x, int y)
 		else
 			return FALSE;
 	}
+	return FALSE;
 }
-void Eat(chessNode* node)
+
+void Eat(int x, int y)
 {
+	chessNode *destinationChess = NULL;
+	/* 查看目的地坐标是否有敌方棋子 */
 	switch (g_status)
 	{
 	case RED_TAG:
-		ListDelete(g_blackChessListHead, node);
+		if (destinationChess = FindChessNode(x, y, BLACK_TAG)) ListDelete(g_blackChessListHead, destinationChess);
 		break;
 	case BLACK_TAG:
-		ListDelete(g_redChessListHead, node);
+		if (destinationChess = FindChessNode(x, y, RED_TAG)) ListDelete(g_redChessListHead, destinationChess);
 		break;
 	}
 }

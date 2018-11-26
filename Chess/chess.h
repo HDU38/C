@@ -2,8 +2,8 @@
 #include <conio.h>
 #include <math.h>
 
-#define MIN(a,b) a > b ? b : a
-#define MAX(a,b) a > b ? a : b
+#define MIN(a,b) (a > b ? b : a)
+#define MAX(a,b) (a > b ? a : b)
 #define IN_RED_PALACE(x,y) (x>=4*GRID_WIDTH&&x<=6*GRID_WIDTH&&y>=8*GRID_WIDTH&&y<=10*GRID_WIDTH)
 #define IN_BLACK_PALACE(x,y) (x>=4*GRID_WIDTH&&x<=6*GRID_WIDTH&&y>=GRID_WIDTH&&y<=3*GRID_WIDTH)
 
@@ -55,4 +55,4 @@ void DrawBlackChess(CHESS *chess);
 void DrawBoard();
 int *CalCoordinate(int x,int y);
 int InPalace(int x, int y);
-void Eat(chessNode* node);
+void Eat(int x, int y);
