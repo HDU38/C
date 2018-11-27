@@ -4,37 +4,38 @@
 
 int g_board[10][9] = 
 {
-	{2,2,2,2,2,2,2,2,2},
-    {0,0,0,0,0,0,0,0,0},
-	{0,2,0,0,0,0,0,2,0},
-	{2,0,2,0,2,0,2,0,2},/* 黑棋为2 */
+	{1,2,3,4,5,4,3,2,1},
+	{0,0,0,0,0,0,0,0,0},
+	{0,6,0,0,0,0,0,6,0},
+	{7,0,7,0,7,0,7,0,7},
 	{0,0,0,0,0,0,0,0,0},
 	{0,0,0,0,0,0,0,0,0},
-	{1,0,1,0,1,0,1,0,1},/* 红棋为1 */
-	{0,1,0,0,0,0,0,1,0},
+	{-7,0,-7,0,-7,0,-7,0,-7},
+	{0,-6,0,0,0,0,0,-6,0},
 	{0,0,0,0,0,0,0,0,0},
-	{1,1,1,1,1,1,1,1,1}
+	{-1,-2,-3,-4,-5,-4,-3,-2,-1},
 
 };
 chessNode* g_redChessListHead;/* 红棋链表 */
 chessNode* g_blackChessListHead;/* 黑棋链表 */
 stackNode* g_blackSpace;
-wchar_t g_blackChessText[] = { L'車',L'馬',L'象',L'士',L'將',L'砲',L'卒' };
-wchar_t g_redChessText[] = { L'俥',L'傌',L'相',L'仕',L'帥',L'炮',L'兵' };
+TNodeVar* g_chequerTree;
+wchar_t g_blackChessText[] = { 0, L'車',L'馬',L'象',L'士',L'將',L'砲',L'卒' };
+wchar_t g_redChessText[] = { 0,L'俥',L'傌',L'相',L'仕',L'帥',L'炮',L'兵' };
 int g_status = RED_TAG;
 int count = 1;
 int g_redAlive = 16;
 int g_blackAlive = 16;
 
 /* 棋子链表 */
-chessNode *InitList()
+chessNode *InitChessList()
 {
 	chessNode *head = (chessNode*)malloc(sizeof(chessNode));/* 申请存储空间，得到头结点 */
 	head->next = NULL;
 	return head;
 }
 /* 增加一个棋子 */
-void ListInsert(chessNode *head, CHESS *chess)
+void ChessListInsert(chessNode *head, CHESS *chess)
 {
 	chessNode *temp = head;
 	while (temp->next != NULL)
@@ -47,7 +48,7 @@ void ListInsert(chessNode *head, CHESS *chess)
 	temp->next = t;
 }
 /* 删除一个棋子 */
-void ListDelete(chessNode *head, chessNode *node)
+void ChessListDelete(chessNode *head, chessNode *node)
 {
 	chessNode *temp = head;
 	chessNode *t;
@@ -69,31 +70,6 @@ void DrawRedChess(CHESS *chess)
 	settextcolor(RED);
 	settextstyle(30, 0, _T("宋体"));
 	outtext(g_redChessText[chess->index]);
-	
-	/*switch (tag)
-	{
-	case 0:
-		outtext(_T("俥"));
-		break;
-	case 1:
-		outtext(_T("傌"));
-		break;
-	case 2:
-		outtext(_T("相"));
-		break;
-	case 3:
-		outtext(_T("仕"));
-		break;
-	case 4:
-		outtext(_T("帥"));
-		break;
-	case 5:
-		outtext(_T("炮"));
-		break;
-	case 6:
-		outtext(_T("兵"));
-		break;
-	}*/
 }
 /* 画出一个黑棋 */
 void DrawBlackChess(CHESS *chess)
@@ -103,37 +79,6 @@ void DrawBlackChess(CHESS *chess)
 	settextcolor(BLACK);
 	settextstyle(30, 0, _T("宋体"));
 	outtext(g_blackChessText[chess->index]);
-	/*switch (tag)
-	{
-	case 0:
-		outtext(_T("車"));
-		strcpy(chess->text, "車");
-		break;
-	case 1:
-		outtext(_T("馬"));
-		strcpy(chess->text, "馬");
-		break;
-	case 2:
-		outtext(_T("象"));
-		strcpy(chess->text, "象");
-		break;
-	case 3:
-		outtext(_T("士"));
-		strcpy(chess->text, "士");
-		break;
-	case 4:
-		outtext(_T("將"));
-		strcpy(chess->text, "將");
-		break;
-	case 5:
-		outtext(_T("砲"));
-		strcpy(chess->text, "砲");
-		break;
-	case 6:
-		outtext(_T("卒"));
-		strcpy(chess->text, "卒");
-		break;
-	}*/
 }
 /* 创建黑棋 */
 void MakeBlackChess(CHESS *chess, int x, int y,int tag)
@@ -143,7 +88,7 @@ void MakeBlackChess(CHESS *chess, int x, int y,int tag)
 	chess->y = y;
 	chess->index = tag;
 	DrawBlackChess(chess);
-	ListInsert(g_blackChessListHead, chess);
+	ChessListInsert(g_blackChessListHead, chess);
 }
 /* 创建红棋 */
 void MakeRedChess(CHESS *chess, int x, int y,int tag)
@@ -153,7 +98,7 @@ void MakeRedChess(CHESS *chess, int x, int y,int tag)
 	chess->y = y;
 	chess->index = tag;
 	DrawRedChess(chess);
-	ListInsert(g_redChessListHead, chess);
+	ChessListInsert(g_redChessListHead, chess);
 }
 
 /* 寻找被点击的棋子 */
@@ -170,6 +115,12 @@ chessNode *FindChessNode(int x, int y,int tag)
 		if (dr <= 0) return temp;
 	}
 	return NULL;
+}
+
+/* 在数组中寻找棋子 */
+int FindChess(int x, int y)
+{
+	return g_board[y / GRID_WIDTH - 1][x / GRID_WIDTH - 1];
 }
 
 /* 画出链表中的所有棋子 */
@@ -191,6 +142,7 @@ int IsCorrect(chessNode* node, int x, int y)
 	chessNode *destinationChess = NULL;
 	int preX = node->chess->x;
 	int preY = node->chess->y;
+
 	int i = 0;
 	int chessNum;
 	if (x < GRID_WIDTH || x>9 * GRID_WIDTH || y < GRID_WIDTH || y>10 * GRID_WIDTH || (x == preX && y == preY)) return FALSE;
@@ -228,6 +180,18 @@ int IsCorrect(chessNode* node, int x, int y)
 			((x - preX) == GRID_WIDTH && (y - preY) == -2 * GRID_WIDTH))
 		{
 			if (FindChessNode(preX, preY - GRID_WIDTH, BLACK_TAG) || FindChessNode(preX, preY - GRID_WIDTH, RED_TAG)) return FALSE;
+		}
+		/* 向东南或东北 x正方向偏移 */
+		else if (((x - preX) == 2*GRID_WIDTH && (y - preY) == GRID_WIDTH) ||
+			((x - preX) == 2 * GRID_WIDTH && (y - preY) == -GRID_WIDTH))
+		{
+			if (FindChessNode(preX+GRID_WIDTH, preY, BLACK_TAG) || FindChessNode(preX+GRID_WIDTH, preY, RED_TAG)) return FALSE;
+		}
+		/* 向西北或西南 x负方向偏移 */
+		else if (((x - preX) == -2*GRID_WIDTH && (y - preY) == -GRID_WIDTH) ||
+			((x - preX) == -2 * GRID_WIDTH && (y - preY) == GRID_WIDTH))
+		{
+			if (FindChessNode(preX-GRID_WIDTH, preY, BLACK_TAG) || FindChessNode(preX-GRID_WIDTH, preY , RED_TAG)) return FALSE;
 		}
 		else return FALSE;
 		break;
@@ -271,8 +235,9 @@ int IsCorrect(chessNode* node, int x, int y)
 		break;
 	case KING_TAG:/* 将 */
 		if (!InPalace(x, y)) return FALSE;
-		if ((abs(x - preX) == GRID_WIDTH && y == preY) ||
-			(abs(y - preY) == GRID_WIDTH && x == preX))/* 只走一步 */
+		if (!((abs(x - preX) == GRID_WIDTH && y == preY) ||
+			(abs(y - preY) == GRID_WIDTH && x == preX)))
+			return FALSE;/* 只走一步 */
 			break;
 	case CANNONS_TAG:/* 炮 */
 		if (!(y == preY) && !(x == preX))/* 只能走直线 */
@@ -316,6 +281,7 @@ int IsCorrect(chessNode* node, int x, int y)
 		}
 		break;
 	case PAWNS_TAG:/* 兵 */
+		/* 过河后 */
 		/* 只能向前、左、右走一步 */
 		switch (g_status)
 		{
@@ -323,8 +289,10 @@ int IsCorrect(chessNode* node, int x, int y)
 			if (!(abs(x - preX) == GRID_WIDTH && y == preY) &&
 				!(y - preY == -GRID_WIDTH && x == preX))
 				return FALSE;
+			if (y > 5 * GRID_WIDTH && !((y - preY) == -GRID_WIDTH && x == preX)) return FALSE;
 			break;
 		case BLACK_TAG:
+			if (y < 6 * GRID_WIDTH && !((y - preY) == GRID_WIDTH && x == preX)) return FALSE;
 			if (!(abs(x - preX) == GRID_WIDTH && y == preY) &&
 				!(y - preY == GRID_WIDTH && x == preX))
 				return FALSE;
@@ -334,6 +302,7 @@ int IsCorrect(chessNode* node, int x, int y)
 	}
 	return TRUE;
 }
+
 /* 移动棋子 */
 void MoveChess(chessNode* node,int x, int y,int colorTag)
 {
@@ -345,29 +314,30 @@ void MoveChess(chessNode* node,int x, int y,int colorTag)
 	if (colorTag == RED_TAG) 
 	{
 		MakeRedChess(chess, x, y, node->chess->index);/* 在指定位置画一个棋子 */
-		g_board[y / GRID_WIDTH - 1][x / GRID_WIDTH - 1] = RED_TAG;
+		g_board[y / GRID_WIDTH - 1][x / GRID_WIDTH - 1] = -node->chess->index;
 		g_board[node->chess->y / GRID_WIDTH - 1][node->chess->x / GRID_WIDTH - 1] = 0;
-		ListDelete(g_redChessListHead, node);/* 删除原先的棋子 */
+		ChessListDelete(g_redChessListHead, node);/* 删除原先的棋子 */
 		count++;
 	}
 	else if (colorTag == BLACK_TAG)
 	{
 		MakeBlackChess(chess, x, y, node->chess->index);/* 在指定位置画一个棋子 */
-		g_board[y / GRID_WIDTH - 1][x / GRID_WIDTH - 1] = BLACK_TAG;
+		g_board[y / GRID_WIDTH - 1][x / GRID_WIDTH - 1] = node->chess->index;
 		g_board[node->chess->y / GRID_WIDTH - 1][node->chess->x / GRID_WIDTH - 1] = 0;
-		ListDelete(g_blackChessListHead, node);/* 删除原先的棋子 */
+		ChessListDelete(g_blackChessListHead, node);/* 删除原先的棋子 */
 		count++;
 	}
 	DrawAllChess(g_redChessListHead, g_blackChessListHead);/* 画出所有棋子 */
 	return;
 }
+
 /* 初始化 */
 void Setup()
 {
 	int i;
 	CHESS *chess = NULL;
-	g_redChessListHead = InitList();
-	g_blackChessListHead = InitList();
+	g_redChessListHead = InitChessList();
+	g_blackChessListHead = InitChessList();
 	g_blackSpace = (stackNode*)malloc(sizeof(stackNode));
 	InitStack(g_blackSpace);
 	initgraph(WIDTH, HEIGHT);
@@ -380,24 +350,25 @@ void Setup()
 	/* 黑棋 */
 	for (i = 0; i < 9; i++)
 	{
-		if(i<=4) MakeBlackChess(chess, (i + 1) * GRID_WIDTH, GRID_WIDTH, i);
-		else MakeBlackChess(chess, (i + 1) * GRID_WIDTH, GRID_WIDTH, 8-i);
+		if(i<=4) MakeBlackChess(chess, (i + 1) * GRID_WIDTH, GRID_WIDTH, i+1);
+		else MakeBlackChess(chess, (i + 1) * GRID_WIDTH, GRID_WIDTH, 9-i);
 	}
-	MakeBlackChess(chess, 2 * GRID_WIDTH, 3 * GRID_WIDTH, 5);
-	MakeBlackChess(chess, 8 * GRID_WIDTH, 3 * GRID_WIDTH, 5);
+	MakeBlackChess(chess, 2 * GRID_WIDTH, 3 * GRID_WIDTH, 6);
+	MakeBlackChess(chess, 8 * GRID_WIDTH, 3 * GRID_WIDTH, 6);
 	for (i = 0; i < 9; i += 2)
-		MakeBlackChess(chess, (i + 1)*GRID_WIDTH, 4 * GRID_WIDTH, 6);
+		MakeBlackChess(chess, (i + 1)*GRID_WIDTH, 4 * GRID_WIDTH, 7);
 	/* 红棋 */
 	for (i = 0; i < 9; i += 2)
-		MakeRedChess(chess, (i + 1)*GRID_WIDTH, 7 * GRID_WIDTH, 6);
-	MakeRedChess(chess, 2 * GRID_WIDTH, 8 * GRID_WIDTH,5);
-	MakeRedChess(chess, 8 * GRID_WIDTH, 8 * GRID_WIDTH,5);
+		MakeRedChess(chess, (i + 1)*GRID_WIDTH, 7 * GRID_WIDTH, 7);
+	MakeRedChess(chess, 2 * GRID_WIDTH, 8 * GRID_WIDTH,6);
+	MakeRedChess(chess, 8 * GRID_WIDTH, 8 * GRID_WIDTH,6);
 	for (i = 0; i < 9; i++)
 	{
-		if (i <= 4) MakeRedChess(chess, (i + 1)*GRID_WIDTH, GRID_WIDTH + BOARD_HEIGHT,i);
-		else MakeRedChess(chess, (i + 1)*GRID_WIDTH, GRID_WIDTH + BOARD_HEIGHT, 8-i);
+		if (i <= 4) MakeRedChess(chess, (i + 1)*GRID_WIDTH, GRID_WIDTH + BOARD_HEIGHT,i+1);
+		else MakeRedChess(chess, (i + 1)*GRID_WIDTH, GRID_WIDTH + BOARD_HEIGHT, 9-i);
 	}
 }
+
 /* 开始游戏 */
 void StartUp()
 {
@@ -430,6 +401,7 @@ void StartUp()
 		}
 	}
 }
+
 /* 画出棋盘 */
 void DrawBoard()
 {
@@ -514,30 +486,238 @@ void Eat(int x, int y)
 	case RED_TAG:
 		if (destinationChess = FindChessNode(x, y, BLACK_TAG))
 		{
-			ListDelete(g_blackChessListHead, destinationChess);
+			ChessListDelete(g_blackChessListHead, destinationChess);
 			g_blackAlive--;
 		}
 		break;
 	case BLACK_TAG:
 		if (destinationChess = FindChessNode(x, y, RED_TAG))
 		{
-			ListDelete(g_redChessListHead, destinationChess);
+			ChessListDelete(g_redChessListHead, destinationChess);
 			g_redAlive--;
 		}
 		break;
 	}
 }
+
 /* 生成所有走法 */
-void GenerateMoves()
+void GenerateMoves(int(*board)[9])
 {
 	int x, y;
+	int tempBoard[10][9];
 	chessNode *temp = g_blackChessListHead;
 	stackNode *tempStackNode = NULL;
+	g_chequerTree = InitTree(board);
+	chequerList* child = InitList();
 	while ((temp = temp->next) != NULL) 
 	{
 		switch (temp->chess->index)
 		{
 		case ROOKS_TAG:/* 车 */
+			for (x = GRID_WIDTH; x < 10 * GRID_WIDTH; x += GRID_WIDTH)
+			{
+				if (x == temp->chess->x) continue;
+				if (IsCorrect(temp, x, temp->chess->y))
+				{
+					tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+					tempStackNode->x = x;
+					tempStackNode->y = temp->chess->y;
+					tempStackNode->node = temp;
+					//Push(g_blackSpace, tempStackNode);//入栈
+					ArrayCopy(board, tempBoard);
+					Move(tempBoard, temp->chess->x / GRID_WIDTH - 1, temp->chess->y / GRID_WIDTH - 1, x / GRID_WIDTH - 1, y / GRID_WIDTH - 1);
+					ListInsert(child, tempBoard);
+				}
+			}
+			for (y = GRID_WIDTH; y < 11 * GRID_WIDTH; y += GRID_WIDTH)
+			{
+				if (y == temp->chess->y) continue;
+				if (IsCorrect(temp, temp->chess->x, y))
+				{
+					tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+					tempStackNode->x = temp->chess->x;
+					tempStackNode->y = y;
+					tempStackNode->node = temp;
+					//Push(g_blackSpace, tempStackNode);//入栈
+					ArrayCopy(board, tempBoard);
+					Move(tempBoard, temp->chess->x / GRID_WIDTH - 1, temp->chess->y / GRID_WIDTH - 1, x / GRID_WIDTH - 1, y / GRID_WIDTH - 1);
+					ListInsert(child, tempBoard);
+				}
+			}
+			break;
+		case KNIGHTS_TAG:/* 马 */
+			if (IsCorrect(temp, temp->chess->x - GRID_WIDTH, temp->chess->y + 2 * GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - GRID_WIDTH;
+				tempStackNode->y = temp->chess->y + 2 * GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x - GRID_WIDTH, temp->chess->y - 2 * GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - GRID_WIDTH;
+				tempStackNode->y = temp->chess->y - 2 * GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x - 2*GRID_WIDTH, temp->chess->y -  GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - 2 * GRID_WIDTH;
+				tempStackNode->y = temp->chess->y -  GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x - 2*GRID_WIDTH, -(temp->chess->y + GRID_WIDTH)))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - 2*GRID_WIDTH;
+				tempStackNode->y = temp->chess->y + GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+
+			if (IsCorrect(temp, temp->chess->x + 2*GRID_WIDTH, temp->chess->y + GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + 2*GRID_WIDTH;
+				tempStackNode->y = temp->chess->y +  GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x + 2*GRID_WIDTH, temp->chess->y -  GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + 2*GRID_WIDTH;
+				tempStackNode->y = temp->chess->y -  GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x + GRID_WIDTH, temp->chess->y +  2*GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + GRID_WIDTH;
+				tempStackNode->y = temp->chess->y +  2*GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x + GRID_WIDTH, temp->chess->y -  2*GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + GRID_WIDTH;
+				tempStackNode->y = temp->chess->y -  2*GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			//入栈
+			break;
+		case ELEPHANTS_TAG:/* 象 */
+			if (IsCorrect(temp, temp->chess->x - 2*GRID_WIDTH, temp->chess->y + 2 * GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - 2*GRID_WIDTH;
+				tempStackNode->y = temp->chess->y + 2 * GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x - 2*GRID_WIDTH, temp->chess->y - 2 * GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - 2*GRID_WIDTH;
+				tempStackNode->y = temp->chess->y - 2 * GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x + 2*GRID_WIDTH, temp->chess->y - 2 * GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + 2*GRID_WIDTH;
+				tempStackNode->y = temp->chess->y - 2 * GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x+  2*GRID_WIDTH, temp->chess->y + 2 * GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + 2*GRID_WIDTH;
+				tempStackNode->y = temp->chess->y + 2 * GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			//入栈
+			break;
+		case ADVISORS_TAG:/* 士 */
+			if (IsCorrect(temp, temp->chess->x -  GRID_WIDTH, temp->chess->y +  GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x -  GRID_WIDTH;
+				tempStackNode->y = temp->chess->y +  GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x -  GRID_WIDTH, temp->chess->y -  GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x -  GRID_WIDTH;
+				tempStackNode->y = temp->chess->y -  GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x +  GRID_WIDTH, temp->chess->y -  GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x +  GRID_WIDTH;
+				tempStackNode->y = temp->chess->y -  GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x +  GRID_WIDTH, temp->chess->y +  GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x +  GRID_WIDTH;
+				tempStackNode->y = temp->chess->y +  GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			//入栈
+			break;
+		case KING_TAG:/* 将 */
+			if (IsCorrect(temp, temp->chess->x - GRID_WIDTH, temp->chess->y))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - GRID_WIDTH;
+				tempStackNode->y = temp->chess->y;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x, temp->chess->y + GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x;
+				tempStackNode->y = temp->chess->y + GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x, temp->chess->y - GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x;
+				tempStackNode->y = temp->chess->y - GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x + GRID_WIDTH, temp->chess->y))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + GRID_WIDTH;
+				tempStackNode->y = temp->chess->y;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			//入栈
+		case CANNONS_TAG:/* 炮 */
 			for (x = GRID_WIDTH; x < 10 * GRID_WIDTH; x += GRID_WIDTH)
 			{
 				if (x == temp->chess->x) continue;
@@ -562,37 +742,55 @@ void GenerateMoves()
 					Push(g_blackSpace, tempStackNode);//入栈
 				}
 			}
-			break;
-		case KNIGHTS_TAG:/* 马 */
-			//入栈
-			break;
-		case ELEPHANTS_TAG:/* 象 */
-			//入栈
-			break;
-		case ADVISORS_TAG:/* 士 */
-			//入栈
-			break;
-		case KING_TAG:/* 将 */
-			//入栈
-		case CANNONS_TAG:/* 炮 */
 			//入栈
 			break;
 		case PAWNS_TAG:/* 兵 */
+			if (IsCorrect(temp, temp->chess->x - GRID_WIDTH, temp->chess->y))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x - GRID_WIDTH;
+				tempStackNode->y = temp->chess->y;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x, temp->chess->y + GRID_WIDTH))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x;
+				tempStackNode->y = temp->chess->y + GRID_WIDTH;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
+			if (IsCorrect(temp, temp->chess->x + GRID_WIDTH, temp->chess->y))
+			{
+				tempStackNode = (stackNode*)malloc(sizeof(stackNode));
+				tempStackNode->x = temp->chess->x + GRID_WIDTH;
+				tempStackNode->y = temp->chess->y;
+				tempStackNode->node = temp;
+				Push(g_blackSpace, tempStackNode);//入栈
+			}
 			//入栈
 			break;
 		}
 	}
 }
+
 void AI()
 {
-	GenerateMoves();
+	int count = 0;
+	GenerateMoves(g_board);
 	stackNode* temp = Pop(g_blackSpace);
 	while (temp)
 	{
-		if(temp->node) MoveChess(temp->node, temp->x, temp->y,BLACK_TAG);
+		if (temp->node&&temp->node->chess->index == 7)
+		{
+			MoveChess(temp->node, temp->x, temp->y, BLACK_TAG);
+			break;
+		}
 		temp = Pop(g_blackSpace);
 	}
 }
+
 /* 初始化一个栈 */
 int InitStack(stackNode* top)
 {
@@ -635,4 +833,70 @@ stackNode* Pop(stackNode* top)
 	top->next = temp->next;/* 更换栈顶元素 */
 	free(temp);/* 释放存储空间 */
 	return element;
+}
+
+/* 复制一个二维数组 */
+void ArrayCopy(int(*a)[9], int(*b)[9])
+{
+	for (int i = 0; i < 10; i++)
+		for (int j = 0; j < 9; j++)
+			b[i][j] = a[i][j];
+}
+
+chequerList *InitList()
+{
+	chequerList *head = (chequerList*)malloc(sizeof(chequerList));/* 申请存储空间，得到头结点 */
+	head->next = NULL;
+	return head;
+}
+void ListInsert(chequerList *head, int(*boardArray)[9])
+{
+	chequerList *temp = head;
+	while (temp->next != NULL)
+	{
+		temp = temp->next;
+	}
+	chequerList *t = (chequerList*)malloc(sizeof(chequerList));
+	TNodeVar *node = InitTree(boardArray);
+	t->node = node;
+	t->next = temp->next;
+	temp->next = t;
+}
+void ListDelete(chequerList *head, chequerList *node)
+{
+	chequerList *temp = head;
+	chequerList *t;
+	while (temp->next != NULL)
+	{
+		if (temp->next == node) break;
+		temp = temp->next;
+	}
+	if (!temp->next) return;
+	t = temp->next;
+	temp->next = t->next;
+	free(t);
+}
+
+/* 初始化一棵树 */
+TNodeVar* InitTree(int(*currentChequer)[9])
+{
+	TNodeVar* root = (TNodeVar*)malloc(sizeof(TNodeVar));
+	ArrayCopy(currentChequer, root->chequer);
+	root->childList = NULL;
+	return root;
+}
+
+/* 当前结点插入一个链表分支 */
+void TreeInsert(TNodeVar* currentNode,chequerList* list)
+{
+	currentNode->childList = list;
+}
+
+/* 删除一个结点 */
+void TreeDelete()
+{}
+void Move(int(*a)[9], int x1, int y1, int x2, int y2)
+{
+	a[x2][y2] = a[x1][y1];
+	a[x1][y1] = 0;
 }
