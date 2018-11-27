@@ -1,6 +1,7 @@
 #include <graphics.h>
 #include <conio.h>
 #include <math.h>
+#include <stdio.h>
 
 #define MIN(a,b) (a > b ? b : a)
 #define MAX(a,b) (a > b ? a : b)
@@ -29,12 +30,20 @@
 #define FALSE 0
 #define TRUE 1
 
+
 typedef struct chessTag
 {
 	int x;
 	int y;
 	int index;
 }CHESS;
+typedef struct
+{
+	CHESS *chess;
+	int x;
+	int y;
+}moveAction;
+
 typedef struct chessList
 {
 	CHESS *chess;
@@ -51,7 +60,7 @@ typedef struct stackNode
 
 struct TNode
 {
-	int chequer[10][9];/* 棋盘 */
+	moveAction *move;
 	struct chequerList* childList;
 };
 
@@ -101,7 +110,7 @@ int IsEmpty(stackNode*);
 int Push(stackNode*, stackNode*);
 
 /* 初始化一棵树 */
-TNodeVar* InitTree(int(*currentChequer)[9]);
+TNodeVar* InitTree(moveAction* move,int x,int y);
 /* 在指定深度插入一个结点 */
 void TreeInsert(TNodeVar* currentNode, chequerList* list);
 /* 删除一个结点 */
@@ -112,5 +121,7 @@ void AI();
 int FindChess(int x, int y);
 void Move(int(*a)[9], int x1, int y1, int x2, int y2);
 chequerList *InitList();
-void ListInsert(chequerList *head, int(*boardArray)[9]);
+void ListInsert(chequerList *head, TNode *node);
 void ListDelete(chequerList *head, chequerList *node);
+void DrawChess();
+void WriteToFile(CHESS* chess, int x, int y);
